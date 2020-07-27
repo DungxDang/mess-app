@@ -5,7 +5,7 @@ import App from './App';
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <App userId={1} userName={'user1'} friendListIds={[2,3,4,5,6]}/>
   </React.StrictMode>,
   document.getElementById('root')
 );
