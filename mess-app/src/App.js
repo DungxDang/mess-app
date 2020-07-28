@@ -12,6 +12,14 @@ class App() extends React.Component{
 		});
 	}
 
+	componentDidMount(){
+		const socket = SocketIoClient('http://127.0.0.1:3002');
+
+		socket.emit('joinRoom',this.state.roomId, this.props.userID, this.props.userName);
+
+		socket.emit('online', this.props.userID, this.props.friendListIds);//check if this array
+	};
+
 	setRoom(roomId, roomName){
 		this.setState({
 			roomName : roomName,
@@ -32,6 +40,7 @@ class App() extends React.Component{
 				/>
 		     	<ChatRoom roomName={'user2'}
 		     			  roomId={'12'}
+		     			  userId={this.props.userId}
 		     	/>
 		      
 		    </div>

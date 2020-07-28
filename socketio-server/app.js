@@ -7,20 +7,20 @@ var mongoUrl = 'mongodb://localhost:27017/';
 io.on('connection', (socket) => {
 	console.log('a user connected:'+socket.id);
 
-	socket.on('joinRoom', (room, userName) =>{
+	socket.on('joinRoom', (room, id, userName) =>{
 		socket.join(room);
-		io.to(room).emit('joinRoom', userName);
+		socket.to(room).emit('joinRoom', id, userName);
 	});
 
-	socket.on('message', (mess, collection, userId) => {
+	socket.on('message', (mess, collection, userName) => {
 		MongoClient.connect(mongoUrl, (err, db) => {
 			if(err) throw err;
 			var dbo = db.db('mess-app');
-			var newMess = {userId:userId, mess:mess};
-			dbo.collection(collection).insert(newMess, (err, res) =>{
+			var newMess = {userName:userName, message:mess};
+			dbo.collection(collection).insertOne(newMess, (err, res) =>{
 				if(err) throw err;
-				io.to(collection).emit('message', mess);
-				console.log('a message added: '+res);
+				io.to(collection).emit('message', res._id, userName, mess);
+				console.log('a message added: '+res);//check this res
 				db.close();
 			});
 		});
