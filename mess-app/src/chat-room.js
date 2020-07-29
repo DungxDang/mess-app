@@ -4,10 +4,25 @@ import SocketIoClient from 'socket.io-client';
 
 
 function newMess(props){
+	const [text, setText] = useState('');
 
+	function handleSubmit(event) {
+		props.socket.emit('message', text, props.roomId, props.userName);
+		setText('');
+		//event.target.value = '';
+		event.cancelDefault();
+	}
 
+	function handleChange(event) {
+		setText(event.target.value);//is the screen rerender twice!
+	}
 
-	return();
+	return(
+		<form onSubmit={handleSubmit}>
+			<input type='text' value={text} onChange={handleChange} />
+			<input type='submit' value='send' />
+		</form>
+	);
 }
 
 function Room(props){
@@ -26,23 +41,24 @@ function Room(props){
 	}
 
 	useEffect(() => {
-		fetch('http://localhost:3001/messages',{collection:this.props.roomId})//check
-			.then(data => data.json())
-			.then(data =>{
-				console.log(data);
-				setMessages(listing(data));
+
+		if(props.roomId){
+			fetch('http://localhost:3001/messages',{collection:props.roomId})//check
+				.then(data => data.json())
+				.then(data =>{
+					console.log(data);
+					setMessageList(listing(data));
+				});
+
+			props.socket.on('joinRoom', (otherUserId, userName) =>{
+				let element = (<dl key={otherUserId}><dd>{userName+' has joined'}</dd></dl>);
+				setMessageList([...messageList, element]);
 			});
 
-		const socket = SocketIoClient('http://127.0.0.1:3002');
-
-		socket.on('joinRoom', (id, userName) =>{
-			let element = (<dl key={id}><dd>{userName+' has joined'}</dd></dl>);
-			setMessageList([...messageList, element]);
-		});
-
-		socket.on('message', (_id, userName, mess) =>{
-			setMessageList([...messageList, (<dl key={_id}><dt>userName</dt> <dd>mess</dd></dl>)]);
-		});
+			props.socket.on('message', (_id, userName, mess) =>{
+				setMessageList([...messageList, (<dl key={_id}><dt>userName</dt> <dd>mess</dd></dl>)]);
+			});
+		}	
 	},[]);
 	
 
@@ -53,14 +69,15 @@ function Room(props){
 
 function ChatRoom(props) {
 
-
-
-
 	return (
 	    <div style={{width:"70%"}}>
-	    	<div><h4>this.props.roomName</h4></div>
-	    	<Room roomId={this,props.roomId}/>
-	    	<newMess/>
+	    	<div><h4>props.roomName</h4></div>
+	    	<Room roomId={props.roomId}
+	    		  socket={socket}
+	    	/>
+	    	<newMess socket={socket}
+	    			 roomId={props.roomId}
+	    	/>
 	    </div>
 	);
 }
