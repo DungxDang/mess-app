@@ -8,11 +8,11 @@ app.get('/friendList', function(req, res){
 	MongoClient.connect(mongodbUrl, (err, db) => {
 		if(err) throw err;
 		var dbo = db.db('mess-app');
-		dbo.collection('users').find({id : req.id}, (err, data) => {
+		dbo.collection('users').find({id : {$in:req.friendListIds}}, {_id:0,id:1,userName:1}, (err, data) => {
 			if(err) throw err;
 			res.send(data);
 			da.close();
-		});
+		});//check
 	});
 
 });
