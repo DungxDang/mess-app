@@ -21,11 +21,24 @@ class App() extends React.Component{
 	}
 
 
-	setRoom(roomId, roomName){
-		this.setState({
-			roomName : roomName,
-			roomId : roomId
-		});
+	setRoom(userId, userName){
+		let roomId=''
+		if(userId>props.userId){
+			roomId=props.userId+''+userId
+		}else{
+			roomId=userId+''+props.userId
+		}
+		if(this.state.roomId !== roomId){
+			if(this.state.roomId){
+				this.state.socket.emit('leaveRoom', this.state.roomId);
+			}
+
+			this.setState({
+				roomName : userName,
+				roomId : roomId
+			});
+			this.state.socket.emit('joinRoom',this.state.roomId, this.props.userID, this.props.userName);
+		}
 	}
 
 	render(){
@@ -36,7 +49,6 @@ class App() extends React.Component{
 			<div><h2>this.props.userName</h2></div>
 		    <div className="App">
 		    	<FriendList setRoom={this.setRoom)}
-							userID={this.props.userID}
 							friendListIds={this.props.friendListIds}
 							socket={this.state.socket}
 				/>

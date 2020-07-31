@@ -12,6 +12,10 @@ io.on('connection', (socket) => {
 		socket.to(room).emit('joinRoom', userId, userName);
 	});
 
+	socket.on('leaveRoom',(roomId) => {
+		socket.leave('roomId');
+	});
+
 	socket.on('message', (mess, roomId, userName) => {
 		MongoClient.connect(mongoUrl, (err, db) => {
 			if(err) throw err;

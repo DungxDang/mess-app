@@ -3,11 +3,6 @@ import React, {useState, useEffect} from 'react';
 function FriendList(props) {
   const [friendList, setFriendList] = useState();
 
-
-
-	//props.socket.emit('joinRoom',this.state.roomId, this.props.userID, this.props.userName);
-	//leave room
-
   useEffect(() => {
               fetch('http://localhost:3001/friendList', {friendListIds:props.friendListIds})
               .then(data => data.json())
@@ -16,14 +11,14 @@ function FriendList(props) {
               });
             },[]);
 
-  function handleClick(userID, userName) {
-    props.setRoom();//?????
+  function handleClick(userId, userName) {
+    props.setRoom(userId, userName);
   }
 
   function listing(friendList) {
     const list = friendList.map((user) =>{
       return(
-        <div key={user.id} onClick={() => handleClick(userID, userName)}><h6>user.userName</h6></div>
+        <div key={user.id} onClick={() => handleClick(userId, userName)}><h6>user.userName</h6></div>
       ):
     });
     return list
@@ -31,10 +26,8 @@ function FriendList(props) {
 
   return (
     <div style={{width:"30%"}}>
-      <div > <h4>FriendList</h4>
-      </div>friendList
-      <div>
-      </div>
+      <div> <h4>FriendList</h4> </div>
+      <div>friendList</div>
     </div>
   );
 }
