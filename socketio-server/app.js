@@ -7,6 +7,17 @@ var mongoUrl = 'mongodb://localhost:27017/';
 io.on('connection', (socket) => {
 	console.log('a user connected:'+socket.id);
 
+	socket.on('online', (userId, friendListIds) =>{
+		socket.join(userId+"");
+		friendListIds.map((userId) =>{
+			socket.to(userId).emit('I\'m online', userId);
+		});
+	});
+
+	socket.on('I\'m online', (userId) =>{
+		socket.emit('friend online', userId);
+	});
+
 	socket.on('joinRoom', (room, userId, userName) =>{
 		socket.join(room);
 		socket.to(room).emit('joinRoom', userId, userName);
