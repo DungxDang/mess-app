@@ -17,7 +17,6 @@ class App() extends React.Component{
 		this.setState({
 			socket:SocketIoClient('http://127.0.0.1:3002')
 		});
-		//this.state.socket.emit('online', this.props.userID, this.props.friendListIds);//check if this array
 	}
 
 
@@ -46,9 +45,10 @@ class App() extends React.Component{
 
 
 		return (
-			<div><h2>this.props.userName</h2></div>
+			<div><h2>{this.props.userName}</h2></div>
 		    <div className="App">
 		    	<FriendList setRoom={this.setRoom)}
+							userId={this.props.userId}
 							friendListIds={this.props.friendListIds}
 							socket={this.state.socket}
 				/>

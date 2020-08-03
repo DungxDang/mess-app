@@ -9,13 +9,13 @@ io.on('connection', (socket) => {
 
 	socket.on('online', (userId, friendListIds) =>{
 		socket.join(userId+"");
-		friendListIds.map((userId) =>{
-			socket.to(userId).emit('I\'m online', userId);
+		friendListIds.map((friendId) =>{
+			socket.to(friendId+'').emit('I\'m online', userId);
 		});
 	});
 
-	socket.on('I\'m online', (userId) =>{
-		socket.emit('friend online', userId);
+	socket.on('I\'m online', (userId, friendId) =>{
+		socket.to(friendId+'').emit('friend online', userId);
 	});
 
 	socket.on('joinRoom', (room, userId, userName) =>{

@@ -56,14 +56,14 @@ function Room(props){
 			});
 
 			props.socket.on('message', (_id, userName, mess) =>{
-				setMessageList([...messageList, (<dl key={_id}><dt>userName</dt> <dd>mess</dd></dl>)]);
+				setMessageList([...messageList, (<dl key={_id}><dt>{userName}</dt> <dd>{mess}</dd></dl>)]);
 			});
 		}	
 	},[]);
 	
 
 	return(
-		<div>messageList</div>
+		<div>{messageList}</div>
 	);
 }
 
@@ -71,7 +71,7 @@ function ChatRoom(props) {
 
 	return (
 	    <div style={{width:"70%"}}>
-	    	<div><h4>props.roomName</h4></div>
+	    	<div><h4>{props.roomName}</h4></div>
 	    	<Room roomId={props.roomId}
 	    		  socket={socket}
 	    	/>
