@@ -7,14 +7,36 @@ function newMess(props){
 	const [text, setText] = useState('');
 
 	function handleSubmit(event) {
-		props.socket.emit('message', text, props.roomId, props.userName);
 		setText('');
+		if(!props.chatFriend.chatting){
+			let condition = {id:chatFriend.id, 'friends.id':props.userId};
+			let update = {'$inc':{'friends.$.notRead':1}};//test
+			fetch('http://localhost:3001/incNotRead',{condition:condition, update:update})
+			.then(res => res.json())
+				.then(res =>{
+					//
+				});
+			if(props.chatFriend.isOnline)
+				props.socket.emit('online-notRead', chatFriend.id);//go thre
+		}
+		let newMess = {userName:props.userName, message:text};
+		fetch('http://localhost:3001/saveMessage',{newMess:newMess, collection:props.roomId})
+			.then(res => res.json())
+				.then(res =>{
+					if(!res.messId)
+						if(props.chatFriend.chatting)
+							props.socket.emit('message', text, props.roomId, messId, props.userName);
+					else{
+						//
+					}
+				});
+        
 		//event.target.value = '';
-		event.cancelDefault();
+		event.preventlDefault();
 	}
 
 	function handleChange(event) {
-		setText(event.target.value);//is the screen rerender twice!
+		setText(event.target.value);//does the screen rerender twice!
 	}
 
 	return(
@@ -30,7 +52,7 @@ function Room(props){
 	const [messageList, setMessageList] = useState();
 
 	function listing(messages) {
-		return messages.map((e) =>{
+		let list = messages.map((e) =>{
 			return(
 				<dl key={e._id}>
 					<dt>e.userName</dt> 
@@ -38,6 +60,12 @@ function Room(props){
 				</dl>
 			);
 		});
+		if(chatFriend.notRead===-1)
+			list.push(
+				<dl key='-1'> 
+					<dd>seen</dd>
+				</dl>
+			);
 	}
 
 	useEffect(() => {
@@ -50,15 +78,15 @@ function Room(props){
 					setMessageList(listing(data));
 				});
 
-			props.socket.on('joinRoom', (otherUserId, userName) =>{
-				let element = (<dl key={otherUserId}><dd>{userName+' has joined'}</dd></dl>);
-				setMessageList([...messageList, element]);
-			});
-
 			props.socket.on('message', (_id, userName, mess) =>{
+				if(chatFriend.notRead===-1){
+					messageList.pop();
+					chatFriend.notRead = 0;
+					fetch('http://localhost:3001/removeSeen', {friendId:chatFriend.id, userId:props.userId});
+				}
 				setMessageList([...messageList, (<dl key={_id}><dt>{userName}</dt> <dd>{mess}</dd></dl>)]);
 			});
-		}	
+		}
 	},[]);
 	
 
@@ -68,15 +96,19 @@ function Room(props){
 }
 
 function ChatRoom(props) {
-
 	return (
 	    <div style={{width:"70%"}}>
-	    	<div><h4>{props.roomName}</h4></div>
+	    	<div><h4>{props.chatFriend.userName}</h4></div>
 	    	<Room roomId={props.roomId}
 	    		  socket={socket}
+	    		  chatFriend={props.chatFriend}
+	    		  userId={props.userId}
 	    	/>
 	    	<newMess socket={socket}
 	    			 roomId={props.roomId}
+	    			 userName={props.userName}
+	    			 userId={props.userId}
+	    			 chatFriend={props.chatFriend}
 	    	/>
 	    </div>
 	);

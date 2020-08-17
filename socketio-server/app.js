@@ -18,26 +18,28 @@ io.on('connection', (socket) => {
 		socket.to(friendId+'').emit('friend online', userId);
 	});
 
-	socket.on('joinRoom', (room, userId, userName) =>{
-		socket.join(room);
-		socket.to(room).emit('joinRoom', userId, userName);
+	socket.on('joinRoom', (roomId, userId) =>{
+		socket.join(roomId);
+		socket.to(roomId).emit('joinRoom', userId);
 	});
 
-	socket.on('leaveRoom',(roomId) => {
-		socket.leave('roomId');
+	socket.on('leaveRoom',(roomId, userId) => {
+		socket.to(roomId).emit('leaveChat', userId);
+		socket.leave(roomId);
 	});
 
-	socket.on('message', (mess, roomId, userName) => {
-		MongoClient.connect(mongoUrl, (err, db) => {
-			if(err) throw err;
-			var dbo = db.db('mess-app');
-			var newMess = {userName:userName, message:mess};
-			dbo.collection(roomId).insertOne(newMess, (err, res) =>{
-				if(err) throw err;
-				io.to(roomId).emit('message', res._id, userName, mess);
-				console.log('a message added: '+res);//check this res
-				db.close();
-			});
+	socket.on('message', (mess, roomId, messId, userName) => {
+		io.to(roomId).emit('message', messId, userName, mess);
+	});
+
+
+	socket.on('online-notRead', (userId) => {
+		socket.to(roomId).emit('online-notRead', userId);
+	});
+
+	socket.on('offline', (userId, friendListIds) =>{
+		friendListIds.map((friendId) =>{
+			socket.to(friendId+'').emit('offline', userId);
 		});
 	});
 
