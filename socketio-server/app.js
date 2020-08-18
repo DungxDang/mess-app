@@ -33,8 +33,12 @@ io.on('connection', (socket) => {
 	});
 
 
-	socket.on('online-notRead', (userId) => {
-		socket.to(roomId).emit('online-notRead', userId);
+	socket.on('online-notRead', (userId, friendId) => {
+		socket.to(friendId+'').emit('online-notRead', userId);
+	});
+
+	socket.on('online-seen', (userId, friendId) => {
+		socket.to(friendId+"").emit('online-seen', userId);
 	});
 
 	socket.on('offline', (userId, friendListIds) =>{

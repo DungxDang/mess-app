@@ -9,7 +9,7 @@ class App() extends React.Component{
 		this.state({
 			roomID:null,
 			chatFriend:null;
-			socket:null
+			socket:null,
 		});
 	}
 
@@ -18,7 +18,6 @@ class App() extends React.Component{
 			socket:SocketIoClient('http://127.0.0.1:3002');
 		});
 	}
-
 
 	setRoom(friend){
     
@@ -32,6 +31,8 @@ class App() extends React.Component{
 			if(this.state.roomId){
 				this.state.socket.emit('leaveRoom', this.state.roomId, this.props.userId);
 			}
+
+			this.state.chatFriend.setSeen_chatting = null;
 
 			this.setState({
 				roomId : roomId,
@@ -56,7 +57,6 @@ class App() extends React.Component{
 				/>
 		     	<ChatRoom roomId={this.state.roomId}
 		     			  chatFriend={this.state.chatFriend}
-		     			  seen={this.state.seen}
 		     			  userName={this.props.userName}
 		     			  userId={this.props.userId}
 						  socket={this.state.socket}

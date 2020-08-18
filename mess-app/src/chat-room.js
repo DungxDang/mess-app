@@ -17,7 +17,7 @@ function newMess(props){
 					//
 				});
 			if(props.chatFriend.isOnline)
-				props.socket.emit('online-notRead', chatFriend.id);//go thre
+				props.socket.emit('online-notRead', props.userId, chatFriend.id);
 		}
 		let newMess = {userName:props.userName, message:text};
 		fetch('http://localhost:3001/saveMessage',{newMess:newMess, collection:props.roomId})
@@ -49,9 +49,10 @@ function newMess(props){
 
 function Room(props){
 
-	const [messageList, setMessageList] = useState();
+	const [messages, setMessages] = useState();
+	const [seen, setSeen] = useState(props.chatFriend.seen);
 
-	function listing(messages) {
+	function listing() {
 		let list = messages.map((e) =>{
 			return(
 				<dl key={e._id}>
@@ -60,12 +61,11 @@ function Room(props){
 				</dl>
 			);
 		});
-		if(chatFriend.notRead===-1)
-			list.push(
-				<dl key='-1'> 
-					<dd>seen</dd>
-				</dl>
-			);
+	}
+
+	function setSeen_chatting(id) {
+		if(props.chatFriend.id===id)
+			setSeen(1);
 	}
 
 	useEffect(() => {
@@ -75,23 +75,28 @@ function Room(props){
 				.then(data => data.json())
 				.then(data =>{
 					console.log(data);
-					setMessageList(listing(data));
+					setMessages(data);
 				});
 
+			props.chatFriend.setSeen_chatting = setSeen_chatting;
+
 			props.socket.on('message', (_id, userName, mess) =>{
-				if(chatFriend.notRead===-1){
-					messageList.pop();
-					chatFriend.notRead = 0;
-					fetch('http://localhost:3001/removeSeen', {friendId:chatFriend.id, userId:props.userId});
+				if(props.chatFriend.seen){
+					fetch('http://localhost:3001/removeSeen', {friendId:props.chatFriend.id, userId:props.userId});
+					setSeen(0);
+					props.chatFriend.seen = 0;
 				}
-				setMessageList([...messageList, (<dl key={_id}><dt>{userName}</dt> <dd>{mess}</dd></dl>)]);
+				let message = {_id:_id, userName:userName, message:mess}
+				setMessages([...messages, message]);
 			});
 		}
 	},[]);
 	
 
 	return(
+		const messageList = listing();
 		<div>{messageList}</div>
+		<div>{seen? 'seen' : ''}</div>
 	);
 }
 

@@ -87,12 +87,12 @@ app.get('/seen', (req, res) => {
 
 	});
 });
-app.get('/seenn', (req, res) => {
+app.get('/removeSeen', (req, res) => {
 	MongoClient.connect(mongodbUrl, (err, db) => {
 		if(err) throw err;
 		var dbo = db.db('mess-app');
 		let condition = {id:req.userId, 'friends.id':req.friendId};
-		let update = {'$set':{'friends.$.notRead':0}};
+		let update = {'$set':{'friends.$.seen':0}};
 		dbo.collection('users').updateOne(condition, update, (err, res) =>{
 			if(err) throw err;
 			db.close();

@@ -48,6 +48,27 @@ function FriendList(props) {
                 });
               });
 
+              props.socket.on('online-notRead', (friendId) =>{
+                let newFriendList = friendList.map((user) =>{
+                  if(user.userId===friendId){
+                    user.notRead = user.notRead+1;
+                  }
+                  return user;
+                });
+                setFriendList(newFriendList);
+
+              });
+
+              props.socket.on('online-seen', (friendId) =>{
+                friendList.map((friend) =>{
+                  if(friend.id===friendId){
+                    friend.seen = 1;
+                    if(friend.setSeen_chatting)
+                      friend.setSeen_chatting(friendId);//is it
+                  }
+                });
+              });
+
               props.socket.on('leaveChat', (friendId) =>{
                 friendList.map((friend) =>{
                   if(friend.id===friendId){
@@ -78,12 +99,16 @@ function FriendList(props) {
     if(friend.notRead>0){
       fetch('http://localhost:3001/seen', {friendId:friend.id, userId:props.userId});
       friend.notRead = 0;
-      friend.seen = 0;
-      setFriendList(friendList.slice());
-    }else
-      if(friend.seen){
 
-      //
+      if(friend.isOnline)
+        props.socket.emit('online-seen', props.userId, friend.id);
+
+      if(friend.seen){
+        friend.seen = 0;
+        fetch('http://localhost:3001/removeSeen', {friendId:friend.id, userId:props.userId});
+      }
+      setFriendList(friendList.slice());
+    }
 
     props.setRoom(friend);
   }
