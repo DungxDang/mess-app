@@ -1,14 +1,27 @@
-const app = require('express')();
+const app = require('./mess-app/node_modules/express')();
 const http = require('http').createServer(app);
 
 var MongoClient = require('mongodb').MongoClient;
 var mongodbUrl = 'mongodb://localhost:27017/';
 
+app.get('/login', function(req, res){
+	MongoClient.connect(mongodbUrl, (err, db) => {
+		if(err) throw err;
+		var dbo = db.db('mess-app');
+		dbo.collection('users').find({userName:req.userName}, {}, (err, data) => {
+			if(err) throw err;
+			res.send(data);
+			da.close();
+		});
+	});
+
+});
+
 app.get('/friendList', function(req, res){
 	MongoClient.connect(mongodbUrl, (err, db) => {
 		if(err) throw err;
 		var dbo = db.db('mess-app');
-		dbo.collection('users').find({id : {$in:req.friendListIds}}, {_id:0}, (err, data) => {
+		dbo.collection('users').find({id : {$in:req.friendListIds}}, {_id:0, friends:0}, (err, data) => {
 			if(err) throw err;
 			res.send(data);
 			da.close();

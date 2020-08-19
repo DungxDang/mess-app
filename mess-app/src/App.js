@@ -1,21 +1,22 @@
 import React from 'react';
+import SocketIoClient from 'socket.io-client';
 import './App.css';
 import ChatRoom from './chat-room';
 import FriendList from './FriendList';
 
-class App() extends React.Component{
+class App extends React.Component{
 	constructor(props){
 		super(props);
 		this.state({
 			roomID:null,
-			chatFriend:null;
+			chatFriend:null,
 			socket:null,
 		});
 	}
 
 	componentDidMount(){
 		this.setState({
-			socket:SocketIoClient('http://127.0.0.1:3002');
+			socket:SocketIoClient('http://127.0.0.1:3002')
 		});
 	}
 
@@ -48,21 +49,23 @@ class App() extends React.Component{
 
 
 		return (
-			<div><h2>{this.props.userName}</h2></div>
-		    <div className="App">
-		    	<FriendList setRoom={this.setRoom)}
-							userId={this.props.userId}
-							friendListIds={this.props.friends}
-							socket={this.state.socket}
-				/>
-		     	<ChatRoom roomId={this.state.roomId}
-		     			  chatFriend={this.state.chatFriend}
-		     			  userName={this.props.userName}
-		     			  userId={this.props.userId}
-						  socket={this.state.socket}
-		     	/>
-		      
-		    </div>
+			<div>
+				<div><h2>{this.props.userName}</h2></div>
+			    <div className="App">
+			    	<FriendList setRoom={this.setRoom}
+								userId={this.props.userId}
+								friendListIds={this.props.friends}
+								socket={this.state.socket}
+					/>
+			     	<ChatRoom roomId={this.state.roomId}
+			     			  chatFriend={this.state.chatFriend}
+			     			  userName={this.props.userName}
+			     			  userId={this.props.userId}
+							  socket={this.state.socket}
+			     	/>
+			      
+			    </div>
+			</div>
   		);
 	};
   

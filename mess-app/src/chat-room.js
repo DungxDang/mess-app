@@ -94,9 +94,10 @@ function Room(props){
 	
 
 	return(
-		const messageList = listing();
-		<div>{messageList}</div>
-		<div>{seen? 'seen' : ''}</div>
+		<div>
+			<div>{listing()}</div>
+			<div>{seen? 'seen' : ''}</div>
+		</div>
 	);
 }
 

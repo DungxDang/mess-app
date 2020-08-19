@@ -1,11 +1,24 @@
-import React from 'react';
+import React, {useState} from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
+import Login from './Login';
+
+
+function Start(props){
+	const [user, setUser] = useState();
+
+
+	if(!user)
+		return (<Login setUser={setUser} />)
+	else
+		return (<App userId={user.id} userName={user.userName} friends={user.friends}/>);
+}
+
 
 ReactDOM.render(
   <React.StrictMode>
-    <App userId={1} userName={'user1'} friends={friends}/>
+    <Start/>
   </React.StrictMode>,
   document.getElementById('root')
 );

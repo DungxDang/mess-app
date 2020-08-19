@@ -2,7 +2,7 @@ import React, {useState, useEffect} from 'react';
 
 function FriendList(props) {
   const [friendList, setFriendList] = useState();
-  const friendListIds = props.friends.map((friends) => friendId.id);
+  const friendListIds = props.friends.map((friend) => friend.id);
 
   useEffect(() => {
               fetch('http://localhost:3001/friendList', {friendListIds:friendListIds})
@@ -118,9 +118,9 @@ function FriendList(props) {
       <div key={friend.id} onClick={() => handleClick(friend)}>
         <h6>{friend.userName}</h6>
           {friend.isOnline? 'Online':''}
-          ({friend.notRead>0 friend.notRead : ''})
+          ({friend.notRead>0? friend.notRead : ''})
       </div>
-    ):
+    );
   });
 
   return (

@@ -1,7 +1,7 @@
 const http = require('http').createServer();
 const io = require('socket.io')(http);
 
-var MongoClient = require('../mongodb').MongoClient;
+var MongoClient = require('../node_modules/mongodb').MongoClient;
 var mongoUrl = 'mongodb://localhost:27017/';
 
 io.on('connection', (socket) => {
