@@ -9,6 +9,7 @@ function Start(props){
 	const [user, setUser] = useState();
 
 
+	//return !user? (<Login setUser={setUser} />) : (<App userId={user.id} userName={user.userName} friends={user.friends}/>);
 	if(!user)
 		return (<Login setUser={setUser} />)
 	else

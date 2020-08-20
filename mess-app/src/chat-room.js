@@ -1,15 +1,14 @@
 import React, {useState, useEffect} from 'react';
-import SocketIoClient from 'socket.io-client';
 
 
 
-function newMess(props){
+function NewMess(props){
 	const [text, setText] = useState('');
 
 	function handleSubmit(event) {
 		setText('');
 		if(!props.chatFriend.chatting){
-			let condition = {id:chatFriend.id, 'friends.id':props.userId};
+			let condition = {id:props.chatFriend.id, 'friends.id':props.userId};
 			let update = {'$inc':{'friends.$.notRead':1}};//test
 			fetch('http://localhost:3001/incNotRead',{condition:condition, update:update})
 			.then(res => res.json())
@@ -17,7 +16,7 @@ function newMess(props){
 					//
 				});
 			if(props.chatFriend.isOnline)
-				props.socket.emit('online-notRead', props.userId, chatFriend.id);
+				props.socket.emit('online-notRead', props.userId, props.chatFriend.id);
 		}
 		let newMess = {userName:props.userName, message:text};
 		fetch('http://localhost:3001/saveMessage',{newMess:newMess, collection:props.roomId})
@@ -25,7 +24,7 @@ function newMess(props){
 				.then(res =>{
 					if(!res.messId)
 						if(props.chatFriend.chatting)
-							props.socket.emit('message', text, props.roomId, messId, props.userName);
+							props.socket.emit('message', text, props.roomId, res.messId, props.userName);
 					else{
 						//
 					}
@@ -61,6 +60,7 @@ function Room(props){
 				</dl>
 			);
 		});
+		return list;
 	}
 
 	function setSeen_chatting(id) {
@@ -106,11 +106,11 @@ function ChatRoom(props) {
 	    <div style={{width:"70%"}}>
 	    	<div><h4>{props.chatFriend.userName}</h4></div>
 	    	<Room roomId={props.roomId}
-	    		  socket={socket}
+	    		  socket={props.socket}
 	    		  chatFriend={props.chatFriend}
 	    		  userId={props.userId}
 	    	/>
-	    	<newMess socket={socket}
+	    	<NewMess socket={props.socket}
 	    			 roomId={props.roomId}
 	    			 userName={props.userName}
 	    			 userId={props.userId}

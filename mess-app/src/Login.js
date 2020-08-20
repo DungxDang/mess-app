@@ -1,36 +1,38 @@
-import React, {useState} from 'react';
+import React from 'react';
 
 
 class Login extends React.Component{
 	constructor(props){
 		super(props);
-		this.state({
-			userName:null,
-			password:null,
-			infor:null
-		});
+		this.state = {
+			userName:'',
+			password:'',
+			infor:''
+		};
+		this.handleSubmit = this.handleSubmit.bind(this);
 	}
 
 	handleChangeUSerName(event){
-		this.setSate({
+		this.setState({
 			userName : event.target.value,
 		});
 	}
 
 	handleChangePassword(event){
-		this.setSate({
+		this.setState({
 			password : event.target.value,
 		});
 	}
 
 	handleSubmit(event){
+		console.log('gggg :'+this.state.userName);
 		if(!this.state.userName)
-			this.setSate({
+			this.setState({
 				infor:'User name please!',
 			});
 		else
 			if(!this.state.password)
-				this.setSate({
+				this.setState({
 					infor:'Password please!',
 				});
 			else
@@ -46,22 +48,24 @@ class Login extends React.Component{
 								console.log(res);
 								this.props.setUser(res);
 							}else
-								this.setSate({
+								this.setState({
 									infor:'User name or password incorrect',
 									password:''
 								});
 						else
-							this.setSate({
+							this.setState({
 								infor:'User name or password incorrect',
 								password:''
 							});
 					});
 
-		event.preventlDefault();
+		event.preventDefault();
 	}
 
 	render(){
 
+		this.handleChangeUSerName = this.handleChangeUSerName.bind(this);
+		this.handleChangePassword = this.handleChangePassword.bind(this);
 		return(
 			<form onSubmit={this.handleSubmit}>
 				<input type='text' value={this.state.userName} onChange={this.handleChangeUSerName} />

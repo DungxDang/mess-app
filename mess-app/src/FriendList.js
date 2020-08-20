@@ -8,8 +8,8 @@ function FriendList(props) {
               fetch('http://localhost:3001/friendList', {friendListIds:friendListIds})
               .then(data => data.json())
               .then(users =>{
-                props.friends.map((friend) =>{
-                  users.map((user) =>{
+                props.friends.forEach((friend) =>{
+                  users.forEach((user) =>{
                     if(user.id===friend.id){
                       user.notRead = friend.notRead;
                       user.seen = friend.seen;
@@ -41,7 +41,7 @@ function FriendList(props) {
               });
 
               props.socket.on('joinRoom', (friendId) =>{
-                friendList.map((friend) =>{
+                friendList.forEach((friend) =>{
                   if(friend.id===friendId){
                     friend.chatting = true;
                   }
@@ -60,7 +60,7 @@ function FriendList(props) {
               });
 
               props.socket.on('online-seen', (friendId) =>{
-                friendList.map((friend) =>{
+                friendList.forEach((friend) =>{
                   if(friend.id===friendId){
                     friend.seen = 1;
                     if(friend.setSeen_chatting)
@@ -70,7 +70,7 @@ function FriendList(props) {
               });
 
               props.socket.on('leaveChat', (friendId) =>{
-                friendList.map((friend) =>{
+                friendList.forEach((friend) =>{
                   if(friend.id===friendId){
                     friend.chatting = false;
                   }

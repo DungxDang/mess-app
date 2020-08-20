@@ -5,13 +5,23 @@ var MongoClient = require('mongodb').MongoClient;
 var mongodbUrl = 'mongodb://localhost:27017/';
 
 app.get('/login', function(req, res){
-	MongoClient.connect(mongodbUrl, (err, db) => {
+	console.log('dsdfsds');
+	console.log(req);//this
+
+	console.log('dsdfsdsdddddddddddd\n');
+	MongoClient.connect(mongodbUrl, {useNewUrlParser: true, useUnifiedTopology: true}, (err, db) => {
 		if(err) throw err;
 		var dbo = db.db('mess-app');
-		dbo.collection('users').find({userName:req.userName}, {}, (err, data) => {
-			if(err) throw err;
-			res.send(data);
-			da.close();
+		dbo.collection('users').find({}, (err, data) => {//this
+			//if(err) throw err;
+
+				console.log('eeeeeeeeeeee'+data);
+			if(err)
+				console.log(err);
+			else 
+				console.log(data);
+				//res.send(data);
+			db.close();
 		});
 	});
 
@@ -24,7 +34,7 @@ app.get('/friendList', function(req, res){
 		dbo.collection('users').find({id : {$in:req.friendListIds}}, {_id:0, friends:0}, (err, data) => {
 			if(err) throw err;
 			res.send(data);
-			da.close();
+			db.close();
 		});//check
 	});
 

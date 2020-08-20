@@ -7,11 +7,11 @@ import FriendList from './FriendList';
 class App extends React.Component{
 	constructor(props){
 		super(props);
-		this.state({
+		this.state = {
 			roomID:null,
 			chatFriend:null,
 			socket:null,
-		});
+		};
 	}
 
 	componentDidMount(){
