@@ -1,11 +1,18 @@
 import React, {useState, useEffect} from 'react';
 
 function FriendList(props) {
-  const [friendList, setFriendList] = useState();
+  const [friendList, setFriendList] = useState([]);
   const friendListIds = props.friends.map((friend) => friend.id);
 
   useEffect(() => {
-              fetch('http://localhost:3001/friendList', {friendListIds:friendListIds})
+              fetch('http://localhost:3001/friendList',{
+                "method": 'POST',
+                //"mode": 'no-cors', 
+                "headers": {
+                  'Content-Type':'application/json',
+                },
+                "body": JSON.stringify({friendListIds:friendListIds}),
+              })
               .then(data => data.json())
               .then(users =>{
                 props.friends.forEach((friend) =>{

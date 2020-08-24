@@ -1,6 +1,5 @@
 import React from 'react';
 
-
 class Login extends React.Component{
 	constructor(props){
 		super(props);
@@ -25,7 +24,6 @@ class Login extends React.Component{
 	}
 
 	handleSubmit(event){
-		console.log('gggg :'+this.state.userName);
 		if(!this.state.userName)
 			this.setState({
 				infor:'User name please!',
@@ -36,16 +34,19 @@ class Login extends React.Component{
 					infor:'Password please!',
 				});
 			else
-				fetch('http://localhost:3001/login',{userName:this.state.userName})
-				.then(res => res.json())
+				fetch('http://localhost:3001/login',{
+					"method": 'POST',
+					//"mode": 'no-cors', 
+					"headers": {
+						'Content-Type':'application/json',
+					},
+					"body": JSON.stringify({ userName : this.state.userName }),
+				}).then(res => res.json())
 					.then(res =>{
-
-						console.log('qqq');
 						console.log(res);
-						console.log('qqq');
-						if(res.password)
+						res = res[0];
+						if(res)
 							if(res.password===this.state.password){
-								console.log(res);
 								this.props.setUser(res);
 							}else
 								this.setState({

@@ -1,64 +1,77 @@
 const app = require('./mess-app/node_modules/express')();
-const http = require('http').createServer(app);
+//const http = require('http').createServer(app);
+const bodyParser = require('./mess-app/node_modules/body-parser');
+//app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.json());
+
+// create application/json parser
+var jsonParser = bodyParser.json();
 
 var MongoClient = require('mongodb').MongoClient;
 var mongodbUrl = 'mongodb://localhost:27017/';
 
-app.get('/login', function(req, res){
-	console.log('dsdfsds');
-	console.log(req);//this
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.header('Access-Control-Allow-Headers', 'Content-Type,X-Requested-With');
+    next();
+});
 
-	console.log('dsdfsdsdddddddddddd\n');
-	MongoClient.connect(mongodbUrl, {useNewUrlParser: true, useUnifiedTopology: true}, (err, db) => {
-		if(err) throw err;
-		var dbo = db.db('mess-app');
-		dbo.collection('users').find({}, (err, data) => {//this
-			//if(err) throw err;
-
-				console.log('eeeeeeeeeeee'+data);
-			if(err)
-				console.log(err);
-			else 
-				console.log(data);
-				//res.send(data);
-			db.close();
-		});
+app.post('/login', jsonParser, function(req, res){
+	MongoClient.connect(mongodbUrl, {useUnifiedTopology: true}, (err, db) => {
+		if(err) console.log(err);
+		else{
+			var dbo = db.db('mess-app');
+			dbo.collection('users').find({userName:req.body.userName},{_id:0})
+				.toArray((err, data) => {//this
+					if(err)
+						console.log(err);
+					else
+						//console.log(data);
+						res.send(data);
+					db.close();
+				});
+		}
+		
 	});
 
 });
 
-app.get('/friendList', function(req, res){
-	MongoClient.connect(mongodbUrl, (err, db) => {
+app.post('/friendList', function(req, res){
+	MongoClient.connect(mongodbUrl, {useUnifiedTopology: true}, (err, db) => {
+		if(err) console.log(err);
+		else{
+			/*var dbo = db.db('mess-app');
+			dbo.collection('users').find({id : {$in:req.body.friendListIds}}, {_id:0,}, (err, data) => {
+				if(err)
+					console.log(err);
+				else
+					res.send(data);
+				db.close();
+			});//check*/
+		}
+	});
+
+});
+
+app.post('/messages', (req, res) => {
+	MongoClient.connect(mongodbUrl, {useUnifiedTopology: true}, (err, db) => {
 		if(err) throw err;
 		var dbo = db.db('mess-app');
-		dbo.collection('users').find({id : {$in:req.friendListIds}}, {_id:0, friends:0}, (err, data) => {
+		dbo.collection(req.body.collection).find({},(err, data) => {
 			if(err) throw err;
 			res.send(data);
 			db.close();
-		});//check
-	});
-
-});
-
-app.get('/messages', (req, res) => {
-	MongoClient.connect(mongodbUrl, (err, db) => {
-		if(err) throw err;
-		var dbo = db.db('mess-app');
-		dbo.collection(req.collection).find({},(err, data) => {
-			if(err) throw err;
-			res.send(data);
-			db.close();
 		});
 	});
 });
 
-app.get('/message', (req, res) => {
-	MongoClient.connect(mongoUrl, (err, db) => {
+app.post('/message', (req, res) => {
+	MongoClient.connect(mongoUrl, {useUnifiedTopology: true}, (err, db) => {
 		if(err)
 			res.send({messId:''});
 		else{
 			let dbo = db.db('mess-app');
-			dbo.collection(req.collection).insertOne(req.newMess, (err, mRes) =>{
+			dbo.collection(req.body.collection).insertOne(req.body.newMess, (err, mRes) =>{
 				if(err)
 					res.send({messId:''});
 				else
@@ -70,13 +83,13 @@ app.get('/message', (req, res) => {
 	});
 });
 
-app.get('/incNotRead', (req, res) => {
-	MongoClient.connect(mongoUrl, (err, db) => {
+app.post('/incNotRead', (req, res) => {
+	MongoClient.connect(mongoUrl, {useUnifiedTopology: true}, (err, db) => {
 		if(err)
 			res.send({success:0});
 		else{
 			let dbo = db.db('mess-app');
-			dbo.collection('users').updateOne(req.condition, req.update, (err, mRes) =>{
+			dbo.collection('users').updateOne(req.body.condition, req.body.update, (err, mRes) =>{
 				if(err)
 					res.send({success:0});
 				else
@@ -90,17 +103,17 @@ app.get('/incNotRead', (req, res) => {
 
 
 
-app.get('/seen', (req, res) => {
-	MongoClient.connect(mongodbUrl, (err, db) => {
+app.post('/seen', (req, res) => {
+	MongoClient.connect(mongodbUrl, {useUnifiedTopology: true}, (err, db) => {
 		if(err) throw err;
 		var dbo = db.db('mess-app');
-		let condition = {id:req.friendId, 'friends.id':req.userId};
+		let condition = {id:req.body.friendId, 'friends.id':req.body.userId};
 		let update = {'$set':{'friends.$.seen':1}};
 		dbo.collection('users').updateOne(condition, update, (err, res) =>{
 			if(err) throw err;
 		});
 
-		condition = {id:req.userId, 'friends.id':req.friendId};
+		condition = {id:req.body.userId, 'friends.id':req.body.friendId};
 		update = {'$set':{'friends.$.notRead':0}};//test
 		dbo.collection('users').updateOne(condition, update, (err, res) =>{
 			if(err) throw err;
@@ -110,11 +123,11 @@ app.get('/seen', (req, res) => {
 
 	});
 });
-app.get('/removeSeen', (req, res) => {
-	MongoClient.connect(mongodbUrl, (err, db) => {
+app.post('/removeSeen', (req, res) => {
+	MongoClient.connect(mongodbUrl, {useUnifiedTopology: true}, (err, db) => {
 		if(err) throw err;
 		var dbo = db.db('mess-app');
-		let condition = {id:req.userId, 'friends.id':req.friendId};
+		let condition = {id:req.body.userId, 'friends.id':req.body.friendId};
 		let update = {'$set':{'friends.$.seen':0}};
 		dbo.collection('users').updateOne(condition, update, (err, res) =>{
 			if(err) throw err;
@@ -124,7 +137,8 @@ app.get('/removeSeen', (req, res) => {
 	});
 });
 
-http.listen('3001', () => {
+//http.listen('3001', () => {
+	app.listen('3001', () => {
 	console.log('Listening on 3001');
 });
 /*db.users.insertMany([

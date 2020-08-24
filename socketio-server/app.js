@@ -1,8 +1,11 @@
 const http = require('http').createServer();
 const io = require('socket.io')(http);
 
-var MongoClient = require('../node_modules/mongodb').MongoClient;
-var mongoUrl = 'mongodb://localhost:27017/';
+/*http.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.header('Access-Control-Allow-Headers', 'Content-Type,X-Requested-With');
+    next();
+});*/
 
 io.on('connection', (socket) => {
 	console.log('a user connected:'+socket.id);

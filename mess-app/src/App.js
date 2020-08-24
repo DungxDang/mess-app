@@ -10,14 +10,12 @@ class App extends React.Component{
 		this.state = {
 			roomID:null,
 			chatFriend:null,
-			socket:null,
+			socket:SocketIoClient('http://127.0.0.1:3002'),
 		};
 	}
 
 	componentDidMount(){
-		this.setState({
-			socket:SocketIoClient('http://127.0.0.1:3002')
-		});
+		
 	}
 
 	setRoom(friend){
@@ -46,7 +44,16 @@ class App extends React.Component{
 
 	render(){
 
-
+		const chatRoom = null;
+		if(this.state.chatFriend)
+			chatRoom = (
+			     	<ChatRoom roomId={this.state.roomId}
+			     			  chatFriend={this.state.chatFriend}
+			     			  userName={this.props.userName}
+			     			  userId={this.props.userId}
+							  socket={this.state.socket}
+			     	/>
+				);
 
 		return (
 			<div>
@@ -54,15 +61,10 @@ class App extends React.Component{
 			    <div className="App">
 			    	<FriendList setRoom={this.setRoom}
 								userId={this.props.userId}
-								friendListIds={this.props.friends}
+								friends={this.props.friends}
 								socket={this.state.socket}
 					/>
-			     	<ChatRoom roomId={this.state.roomId}
-			     			  chatFriend={this.state.chatFriend}
-			     			  userName={this.props.userName}
-			     			  userId={this.props.userId}
-							  socket={this.state.socket}
-			     	/>
+					{chatRoom}
 			      
 			    </div>
 			</div>
