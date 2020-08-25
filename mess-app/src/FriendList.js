@@ -22,6 +22,9 @@ function FriendList(props) {
                       user.seen = friend.seen;
                     }
                   });
+                })
+                .catch(err =>{
+                  console.log(err);
                 });
                 setFriendList(users);
               });
@@ -104,7 +107,41 @@ function FriendList(props) {
   function handleClick(friend) {
 
     if(friend.notRead>0){
-      fetch('http://localhost:3001/seen', {friendId:friend.id, userId:props.userId});
+      fetch('http://localhost:3001/seen',
+          {
+                    "method": 'POST',
+                    //"mode": 'no-cors', 
+                    "headers": {
+                      'Content-Type':'application/json',
+                    },
+                    "body": JSON.stringify({friendId:friend.id, userId:props.userId})
+          })
+          .then(res => res.json())
+            .then(res =>{
+              
+              if(res.notRead.err)
+                if(res.notRead.nModified)
+                  console.log('notread-userid:'+props.userId);
+                else
+                  console.log('conditionless-notread-userid:'+props.userId);
+              else{
+                console.log('err-notread-userid:'+props.userId);
+              }
+
+              if(res.seen.err)
+                if(res.seen.nModified)
+                  console.log('seen-userid:'+friend.id);
+                else
+                  console.log('conditionless-seen-userid:'+friend.id);
+              else{
+                console.log('err-seen-userid:'+friend.id);
+              }
+
+            })
+            .catch((err) =>{
+              console.log(err);
+            });
+
       friend.notRead = 0;
 
       if(friend.isOnline)
@@ -112,7 +149,15 @@ function FriendList(props) {
 
       if(friend.seen){
         friend.seen = 0;
-        fetch('http://localhost:3001/removeSeen', {friendId:friend.id, userId:props.userId});
+        fetch('http://localhost:3001/removeSeen',
+          {
+                    "method": 'POST',
+                    //"mode": 'no-cors', 
+                    "headers": {
+                      'Content-Type':'application/json',
+                    },
+                    "body": JSON.stringify({friendId:friend.id, userId:props.userId})
+          });
       }
       setFriendList(friendList.slice());
     }
@@ -131,7 +176,7 @@ function FriendList(props) {
   });
 
   return (
-    <div style={{width:"30%"}}>
+    <div>
       <div> <h4>FriendList</h4> </div>
       <div>{list}</div>
     </div>

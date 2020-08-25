@@ -20,16 +20,18 @@ app.post('/login', jsonParser, function(req, res){
 	MongoClient.connect(mongodbUrl, {useUnifiedTopology: true}, (err, db) => {
 		if(err) console.log(err);
 		else{
-			var dbo = db.db('mess-app');
-			dbo.collection('users').find({userName:req.body.userName},{_id:0})
-				.toArray((err, data) => {//this
-					if(err)
-						console.log(err);
-					else
-						//console.log(data);
-						res.send(data);
+
+			db.db('mess-app').collection('users')
+				.findOne({userName:req.body.userName},{_id:0})
+				.then((data) => {
+					console.log(data);
+					res.json(data);
 					db.close();
-				});
+				})
+				.catch((err =>{
+					console.log(err);
+				}));
+				
 		}
 		
 	});
@@ -40,14 +42,15 @@ app.post('/friendList', function(req, res){
 	MongoClient.connect(mongodbUrl, {useUnifiedTopology: true}, (err, db) => {
 		if(err) console.log(err);
 		else{
-			/*var dbo = db.db('mess-app');
-			dbo.collection('users').find({id : {$in:req.body.friendListIds}}, {_id:0,}, (err, data) => {
-				if(err)
-					console.log(err);
-				else
-					res.send(data);
-				db.close();
-			});//check*/
+			var dbo = db.db('mess-app');
+			dbo.collection('users').find({id : {$in:req.body.friendListIds}}, {_id:0,})
+				.toArray((err, data) => {
+					if(err)
+						console.log(err);
+					else
+						res.send(data);
+					db.close();
+				});
 		}
 	});
 
@@ -57,29 +60,30 @@ app.post('/messages', (req, res) => {
 	MongoClient.connect(mongodbUrl, {useUnifiedTopology: true}, (err, db) => {
 		if(err) throw err;
 		var dbo = db.db('mess-app');
-		dbo.collection(req.body.collection).find({},(err, data) => {
-			if(err) throw err;
-			res.send(data);
-			db.close();
-		});
+		dbo.collection(req.body.collection).find({})
+			.toArray((err, data) => {
+				if(err) throw err;
+				res.send(data);
+				db.close();
+			});
 	});
 });
 
-app.post('/message', (req, res) => {
+app.post('/saveMessage', (req, res) => {
 	MongoClient.connect(mongoUrl, {useUnifiedTopology: true}, (err, db) => {
 		if(err)
-			res.send({messId:''});
+			console.log(err);
 		else{
-			let dbo = db.db('mess-app');
-			dbo.collection(req.body.collection).insertOne(req.body.newMess, (err, mRes) =>{
-				if(err)
-					res.send({messId:''});
-				else
-					res.send({messId:mRes._id});
-				console.log('a message added: '+mRes);//check this res
+			db.db('mess-app').collection(req.body.collection).insertOne(req.body.newMess)
+			.then((mRes) =>{
+				res.send(mRes.insertedId);
+				db.close();
+			})
+			.catch((err)=>{
+				res.send(0);
+				console.log(err);
 			});
-		}
-		db.close();	
+		}	
 	});
 });
 
@@ -89,15 +93,16 @@ app.post('/incNotRead', (req, res) => {
 			res.send({success:0});
 		else{
 			let dbo = db.db('mess-app');
-			dbo.collection('users').updateOne(req.body.condition, req.body.update, (err, mRes) =>{
-				if(err)
-					res.send({success:0});
-				else
-					res.send({success:1});
-				console.log('updatenotread: '+mRes);//check this res
+			dbo.collection('users').updateOne(req.body.condition, req.body.update)
+			.then((mRes) =>{
+				res.send(mRes);
+				db.close();	
+			})
+			.catch((err)=>{
+				res.send(0);
+				console.log(err);
 			});
 		}
-		db.close();	
 	});
 });
 
@@ -107,19 +112,34 @@ app.post('/seen', (req, res) => {
 	MongoClient.connect(mongodbUrl, {useUnifiedTopology: true}, (err, db) => {
 		if(err) throw err;
 		var dbo = db.db('mess-app');
+
+		var resp = {seen:{nModified:0, err:1}, notRead:{nModified:0, err:1}};
+
 		let condition = {id:req.body.friendId, 'friends.id':req.body.userId};
 		let update = {'$set':{'friends.$.seen':1}};
-		dbo.collection('users').updateOne(condition, update, (err, res) =>{
-			if(err) throw err;
-		});
+		dbo.collection('users').updateOne(condition, update)
+			.then((mRes) =>{
+				resp.seen.nModified = mRes.nModified;
+			})
+			.catch((err)=>{
+				resp.seen.err = 0;
+				console.log(err);
+			});
 
 		condition = {id:req.body.userId, 'friends.id':req.body.friendId};
-		update = {'$set':{'friends.$.notRead':0}};//test
-		dbo.collection('users').updateOne(condition, update, (err, res) =>{
-			if(err) throw err;
-		});
+		update = {'$set':{'friends.$.notRead':0}};
+		dbo.collection('users').updateOne(condition, update)
+			.then((mRes) =>{
+				resp.notRead.nModified = mRes.nModified;
+			})
+			.catch((err)=>{
+				resp.notRead.err = 0;
+				console.log(err);
+			});
 
-		db.close();
+		res.send(resp);
+
+		db.close();//go there async :MongoError: Cannot use a session that has ended
 
 	});
 });
@@ -129,10 +149,15 @@ app.post('/removeSeen', (req, res) => {
 		var dbo = db.db('mess-app');
 		let condition = {id:req.body.userId, 'friends.id':req.body.friendId};
 		let update = {'$set':{'friends.$.seen':0}};
-		dbo.collection('users').updateOne(condition, update, (err, res) =>{
-			if(err) throw err;
-			db.close();
-		});
+		dbo.collection('users').updateOne(condition, update)
+			.then((mRes) =>{
+				res.send(mRes);
+				db.close();
+			})
+			.catch((err)=>{
+				res.send(0);
+				console.log(err);
+			});
 
 	});
 });

@@ -24,7 +24,7 @@ class App extends React.Component{
 		if(friend.userId>this.props.userId){
 			roomId=this.props.userId+''+friend.userId;
 		}else{
-			roomId=friend.userId+''+this.props.userId;
+			roomId='room'+friend.userId+''+this.props.userId;
 		}
 		if(this.state.roomId !== roomId){
 			if(this.state.roomId){
@@ -58,14 +58,17 @@ class App extends React.Component{
 		return (
 			<div>
 				<div><h2>{this.props.userName}</h2></div>
-			    <div className="App">
-			    	<FriendList setRoom={this.setRoom}
-								userId={this.props.userId}
-								friends={this.props.friends}
-								socket={this.state.socket}
-					/>
-					{chatRoom}
-			      
+			    <div>
+			    	<div  style={{width:"30%"}}>
+				    	<FriendList setRoom={this.setRoom}
+									userId={this.props.userId}
+									friends={this.props.friends}
+									socket={this.state.socket}
+						/>
+					</div>
+					<div  style={{width:"70%"}}>
+						{chatRoom}
+					</div>
 			    </div>
 			</div>
   		);

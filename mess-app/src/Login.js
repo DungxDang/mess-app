@@ -44,7 +44,7 @@ class Login extends React.Component{
 				}).then(res => res.json())
 					.then(res =>{
 						console.log(res);
-						res = res[0];
+						
 						if(res)
 							if(res.password===this.state.password){
 								this.props.setUser(res);
@@ -58,7 +58,10 @@ class Login extends React.Component{
 								infor:'User name or password incorrect',
 								password:''
 							});
-					});
+					})
+	                .catch(err =>{
+	                  console.log(err);
+	                });
 
 		event.preventDefault();
 	}

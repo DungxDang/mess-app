@@ -10,21 +10,44 @@ function NewMess(props){
 		if(!props.chatFriend.chatting){
 			let condition = {id:props.chatFriend.id, 'friends.id':props.userId};
 			let update = {'$inc':{'friends.$.notRead':1}};//test
-			fetch('http://localhost:3001/incNotRead',{condition:condition, update:update})
+			fetch('http://localhost:3001/incNotRead',
+			{
+                "method": 'POST',
+                //"mode": 'no-cors', 
+                "headers": {
+                  'Content-Type':'application/json',
+                },
+                "body": JSON.stringify({condition:condition, update:update}),
+            })
 			.then(res => res.json())
 				.then(res =>{
-					//
+					if(res)
+						if(res.nModified)
+							console.log('incnotread-userid:'+props.chatFriend.id);
+						else
+							console.log('conditionless-incnotread-userid:'+props.chatFriend.id);
+					else{
+						console.log('err-incnotread-userid:'+props.chatFriend.id);
+					}
 				});
 			if(props.chatFriend.isOnline)
 				props.socket.emit('online-notRead', props.userId, props.chatFriend.id);
 		}
 		let newMess = {userName:props.userName, message:text};
-		fetch('http://localhost:3001/saveMessage',{newMess:newMess, collection:props.roomId})
+		fetch('http://localhost:3001/saveMessage',
+			{
+                "method": 'POST',
+                //"mode": 'no-cors', 
+                "headers": {
+                  'Content-Type':'application/json',
+                },
+                "body": JSON.stringify({newMess:newMess, collection:props.roomId})
+            })
 			.then(res => res.json())
-				.then(res =>{
-					if(!res.messId)
+				.then(messId =>{
+					if(messId)
 						if(props.chatFriend.chatting)
-							props.socket.emit('message', text, props.roomId, res.messId, props.userName);
+							props.socket.emit('message', text, props.roomId, messId, props.userName);
 					else{
 						//
 					}
@@ -71,7 +94,15 @@ function Room(props){
 	useEffect(() => {
 
 		if(props.roomId){
-			fetch('http://localhost:3001/messages',{collection:props.roomId})//check
+			fetch('http://localhost:3001/messages',
+			{
+                "method": 'POST',
+                //"mode": 'no-cors', 
+                "headers": {
+                  'Content-Type':'application/json',
+                },
+                "body": JSON.stringify({collection:props.roomId})
+            })
 				.then(data => data.json())
 				.then(data =>{
 					console.log(data);
@@ -82,7 +113,15 @@ function Room(props){
 
 			props.socket.on('message', (_id, userName, mess) =>{
 				if(props.chatFriend.seen){
-					fetch('http://localhost:3001/removeSeen', {friendId:props.chatFriend.id, userId:props.userId});
+					fetch('http://localhost:3001/removeSeen',
+					{
+		                "method": 'POST',
+		                //"mode": 'no-cors', 
+		                "headers": {
+		                  'Content-Type':'application/json',
+		                },
+		                "body": JSON.stringify( {friendId:props.chatFriend.id, userId:props.userId})
+		            });
 					setSeen(0);
 					props.chatFriend.seen = 0;
 				}
@@ -90,6 +129,7 @@ function Room(props){
 				setMessages([...messages, message]);
 			});
 		}
+
 	},[]);
 	
 
