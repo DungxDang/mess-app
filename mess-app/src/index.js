@@ -13,7 +13,6 @@ function Start(props){
 		return (<Login setUser={setUser} />)
 	else{
 		
-	console.log(user.friends);
 		return (<App userId={user.id} userName={user.userName} friends={user.friends}/>);
 	}
 }

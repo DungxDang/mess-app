@@ -70,7 +70,7 @@ app.post('/messages', (req, res) => {
 });
 
 app.post('/saveMessage', (req, res) => {
-	MongoClient.connect(mongoUrl, {useUnifiedTopology: true}, (err, db) => {
+	MongoClient.connect(mongodbUrl, {useUnifiedTopology: true}, (err, db) => {
 		if(err)
 			console.log(err);
 		else{
@@ -88,7 +88,7 @@ app.post('/saveMessage', (req, res) => {
 });
 
 app.post('/incNotRead', (req, res) => {
-	MongoClient.connect(mongoUrl, {useUnifiedTopology: true}, (err, db) => {
+	MongoClient.connect(mongodbUrl, {useUnifiedTopology: true}, (err, db) => {
 		if(err)
 			res.send({success:0});
 		else{
@@ -113,36 +113,42 @@ app.post('/seen', (req, res) => {
 		if(err) throw err;
 		var dbo = db.db('mess-app');
 
-		var resp = {seen:{nModified:0, err:1}, notRead:{nModified:0, err:1}};
-
 		let condition = {id:req.body.friendId, 'friends.id':req.body.userId};
 		let update = {'$set':{'friends.$.seen':1}};
 		dbo.collection('users').updateOne(condition, update)
 			.then((mRes) =>{
-				resp.seen.nModified = mRes.nModified;
+				res.send(mRes);
+				db.close();
 			})
 			.catch((err)=>{
-				resp.seen.err = 0;
+				res.send(0);
 				console.log(err);
 			});
+
+	});
+});
+
+app.post('/seen', (req, res) => {
+	MongoClient.connect(mongodbUrl, {useUnifiedTopology: true}, (err, db) => {
+		if(err) throw err;
+		var dbo = db.db('mess-app');
 
 		condition = {id:req.body.userId, 'friends.id':req.body.friendId};
 		update = {'$set':{'friends.$.notRead':0}};
 		dbo.collection('users').updateOne(condition, update)
 			.then((mRes) =>{
-				resp.notRead.nModified = mRes.nModified;
+				res.send(mRes);
+				db.close();
 			})
 			.catch((err)=>{
-				resp.notRead.err = 0;
+				res.send(0);
 				console.log(err);
 			});
 
-		res.send(resp);
-
-		db.close();//go there async :MongoError: Cannot use a session that has ended
-
 	});
 });
+
+
 app.post('/removeSeen', (req, res) => {
 	MongoClient.connect(mongodbUrl, {useUnifiedTopology: true}, (err, db) => {
 		if(err) throw err;

@@ -22,11 +22,12 @@ function FriendList(props) {
                       user.seen = friend.seen;
                     }
                   });
-                })
-                .catch(err =>{
-                  console.log(err);
                 });
+
                 setFriendList(users);
+              })
+              .catch(err =>{
+                console.log(err);
               });
 
               let whoOn = (friendId) =>{
@@ -39,70 +40,72 @@ function FriendList(props) {
                 setFriendList(newFriendList);
               };
 
-              props.socket.emit('online', props.userID, friendListIds);
+              if(props.socket){
+                props.socket.emit('online', props.userID, friendListIds);
 
-              props.socket.on('I\'m online', (friendId)=>{
-                whoOn(friendId);
-                props.socket.emit('I\'m online', props.userId, friendId);
-              });
-
-              props.socket.on('friend online', (friendId) =>{
-                whoOn(friendId);
-              });
-
-              props.socket.on('joinRoom', (friendId) =>{
-                friendList.forEach((friend) =>{
-                  if(friend.id===friendId){
-                    friend.chatting = true;
-                  }
+                props.socket.on('I\'m online', (friendId)=>{
+                  whoOn(friendId);
+                  props.socket.emit('I\'m online', props.userId, friendId);
                 });
-              });
 
-              props.socket.on('online-notRead', (friendId) =>{
-                let newFriendList = friendList.map((user) =>{
-                  if(user.userId===friendId){
-                    user.notRead = user.notRead+1;
-                  }
-                  return user;
+                props.socket.on('friend online', (friendId) =>{
+                  whoOn(friendId);
                 });
-                setFriendList(newFriendList);
 
-              });
-
-              props.socket.on('online-seen', (friendId) =>{
-                friendList.forEach((friend) =>{
-                  if(friend.id===friendId){
-                    friend.seen = 1;
-                    if(friend.setSeen_chatting)
-                      friend.setSeen_chatting(friendId);//is it
-                  }
+                props.socket.on('joinRoom', (friendId) =>{
+                  friendList.forEach((friend) =>{
+                    if(friend.id===friendId){
+                      friend.chatting = true;
+                    }
+                  });
                 });
-              });
 
-              props.socket.on('leaveChat', (friendId) =>{
-                friendList.forEach((friend) =>{
-                  if(friend.id===friendId){
-                    friend.chatting = false;
-                  }
+                props.socket.on('online-notRead', (friendId) =>{
+                  let newFriendList = friendList.map((user) =>{
+                    if(user.userId===friendId){
+                      user.notRead = user.notRead+1;
+                    }
+                    return user;
+                  });
+                  setFriendList(newFriendList);
+
                 });
-              });
 
-              props.socket.on('offline', (friendId) =>{
-                let newFriendList = friendList.map((user) =>{
-                  if(user.userId===friendId){
-                    user.isOnline = false;
-                    user.chatting = false;
-                  }
-                  return user;
+                props.socket.on('online-seen', (friendId) =>{
+                  friendList.forEach((friend) =>{
+                    if(friend.id===friendId){
+                      friend.seen = 1;
+                      if(friend.setSeen_chatting)
+                        friend.setSeen_chatting(friendId);//is it
+                    }
+                  });
                 });
-                setFriendList(newFriendList);
-              });
 
-              props.socket.on('disconnect',() =>{
-                props.socket.emit('offline', props.userId, friendListIds);
-              });
+                props.socket.on('leaveChat', (friendId) =>{
+                  friendList.forEach((friend) =>{
+                    if(friend.id===friendId){
+                      friend.chatting = false;
+                    }
+                  });
+                });
 
+                props.socket.on('offline', (friendId) =>{
+                  let newFriendList = friendList.map((user) =>{
+                    if(user.userId===friendId){
+                      user.isOnline = false;
+                      user.chatting = false;
+                    }
+                    return user;
+                  });
+                  setFriendList(newFriendList);
+                });
+
+                props.socket.on('disconnect',() =>{
+                  props.socket.emit('offline', props.userId, friendListIds);
+                });
+              }   
             },[]);
+            
 
   function handleClick(friend) {
 
@@ -118,23 +121,39 @@ function FriendList(props) {
           })
           .then(res => res.json())
             .then(res =>{
-              
-              if(res.notRead.err)
-                if(res.notRead.nModified)
-                  console.log('notread-userid:'+props.userId);
-                else
-                  console.log('conditionless-notread-userid:'+props.userId);
-              else{
-                console.log('err-notread-userid:'+props.userId);
-              }
 
-              if(res.seen.err)
-                if(res.seen.nModified)
+              if(res)
+                if(res.nModified)
                   console.log('seen-userid:'+friend.id);
                 else
                   console.log('conditionless-seen-userid:'+friend.id);
               else{
                 console.log('err-seen-userid:'+friend.id);
+              }
+
+            })
+            .catch((err) =>{
+              console.log(err);
+            });
+      fetch('http://localhost:3001/seen',
+          {
+                    "method": 'POST',
+                    //"mode": 'no-cors', 
+                    "headers": {
+                      'Content-Type':'application/json',
+                    },
+                    "body": JSON.stringify({friendId:friend.id, userId:props.userId})
+          })
+          .then(res => res.json())
+            .then(res =>{
+              
+              if(res)
+                if(res.nModified)
+                  console.log('notread-userid:'+props.userId);
+                else
+                  console.log('conditionless-notread-userid:'+props.userId);
+              else{
+                console.log('err-notread-userid:'+props.userId);
               }
 
             })
@@ -168,9 +187,12 @@ function FriendList(props) {
   const list = friendList.map((friend) =>{
     return(
       <div key={friend.id} onClick={() => handleClick(friend)}>
-        <h6>{friend.userName}</h6>
-          {friend.isOnline? 'Online':''}
-          ({friend.notRead>0? friend.notRead : ''})
+        <h6>
+          {friend.userName}
+          {friend.notRead>0? '('+friend.notRead+')' : ''}
+
+        </h6>
+        {friend.isOnline? 'Online':''}
       </div>
     );
   });

@@ -6,6 +6,7 @@ function NewMess(props){
 	const [text, setText] = useState('');
 
 	function handleSubmit(event) {
+		
 		setText('');
 		if(!props.chatFriend.chatting){
 			let condition = {id:props.chatFriend.id, 'friends.id':props.userId};
@@ -54,7 +55,7 @@ function NewMess(props){
 				});
         
 		//event.target.value = '';
-		event.preventlDefault();
+		event.preventDefault();
 	}
 
 	function handleChange(event) {
@@ -75,15 +76,17 @@ function Room(props){
 	const [seen, setSeen] = useState(props.chatFriend.seen);
 
 	function listing() {
-		let list = messages.map((e) =>{
-			return(
-				<dl key={e._id}>
-					<dt>e.userName</dt> 
-					<dd>e.message</dd>
-				</dl>
-			);
-		});
-		return list;
+		if(messages)
+			return 	messages.map((e) =>{
+						return(
+							<dl key={e._id}>
+								<dt>{e.userName}</dt> 
+								<dd>{e.message}</dd>
+							</dl>
+						);
+					});
+		else
+			return null;
 	}
 
 	function setSeen_chatting(id) {
