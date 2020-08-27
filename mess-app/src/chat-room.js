@@ -47,8 +47,7 @@ function NewMess(props){
 			.then(res => res.json())
 				.then(messId =>{
 					if(messId)
-						if(props.chatFriend.chatting)
-							props.socket.emit('message', text, props.roomId, messId, props.userName);
+						props.socket.emit('message', text, props.roomId, messId, props.userName);
 					else{
 						//
 					}
@@ -72,8 +71,18 @@ function NewMess(props){
 
 function Room(props){
 
-	const [messages, setMessages] = useState();
+	var [messages, setMessages] = useState(props.messages);
 	const [seen, setSeen] = useState(props.chatFriend.seen);
+
+	useEffect((privMessages) => {
+		console.log('privMessages',privMessages, props.messages)
+		if(props.messages!==privMessages){
+			setMessages(props.messages);
+		console.log('privMessages',privMessages, props.messages)
+		}
+
+	},[props.messages]);
+		console.log('room', messages);
 
 	function listing() {
 		if(messages)
@@ -86,33 +95,20 @@ function Room(props){
 						);
 					});
 		else
-			return null;
+			return null;//nonsen
 	}
 
 	function setSeen_chatting(id) {
 		if(props.chatFriend.id===id)
 			setSeen(1);
 	}
+	props.chatFriend.setSeen_chatting = setSeen_chatting;
+
+	function addNewMessage(message){
+		setMessages([...messages, message]);
+	}
 
 	useEffect(() => {
-
-		if(props.roomId){
-			fetch('http://localhost:3001/messages',
-			{
-                "method": 'POST',
-                //"mode": 'no-cors', 
-                "headers": {
-                  'Content-Type':'application/json',
-                },
-                "body": JSON.stringify({collection:props.roomId})
-            })
-				.then(data => data.json())
-				.then(data =>{
-					console.log(data);
-					setMessages(data);
-				});
-
-			props.chatFriend.setSeen_chatting = setSeen_chatting;
 
 			props.socket.on('message', (_id, userName, mess) =>{
 				if(props.chatFriend.seen){
@@ -128,13 +124,16 @@ function Room(props){
 					setSeen(0);
 					props.chatFriend.seen = 0;
 				}
+				console.log('newmess',mess,userName);
 				let message = {_id:_id, userName:userName, message:mess}
-				setMessages([...messages, message]);
+
+				addNewMessage(message);
 			});
-		}
+		
 
 	},[]);
 	
+
 
 	return(
 		<div>
@@ -145,6 +144,7 @@ function Room(props){
 }
 
 function ChatRoom(props) {
+
 	return (
 	    <div style={{width:"70%"}}>
 	    	<div><h4>{props.chatFriend.userName}</h4></div>
@@ -152,6 +152,7 @@ function ChatRoom(props) {
 	    		  socket={props.socket}
 	    		  chatFriend={props.chatFriend}
 	    		  userId={props.userId}
+	    		  messages={props.messages}
 	    	/>
 	    	<NewMess socket={props.socket}
 	    			 roomId={props.roomId}

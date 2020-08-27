@@ -22,6 +22,7 @@ io.on('connection', (socket) => {
 	});
 
 	socket.on('joinRoom', (roomId, userId) =>{
+		console.log(roomId, userId);
 		socket.join(roomId);
 		socket.to(roomId).emit('joinRoom', userId);
 	});
@@ -32,6 +33,7 @@ io.on('connection', (socket) => {
 	});
 
 	socket.on('message', (mess, roomId, messId, userName) => {
+		console.log(mess,roomId, messId, userName);
 		io.to(roomId).emit('message', messId, userName, mess);
 	});
 

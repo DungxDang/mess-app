@@ -43,7 +43,7 @@ app.post('/friendList', function(req, res){
 		if(err) console.log(err);
 		else{
 			var dbo = db.db('mess-app');
-			dbo.collection('users').find({id : {$in:req.body.friendListIds}}, {_id:0,})
+			dbo.collection('users').find({id : {$in:req.body.friendListIds}}, {_id:0, friends:0})
 				.toArray((err, data) => {
 					if(err)
 						console.log(err);

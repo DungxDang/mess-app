@@ -4,45 +4,60 @@ import './App.css';
 import ChatRoom from './chat-room';
 import FriendList from './FriendList';
 
+const socket = SocketIoClient('http://127.0.0.1:3002');
+
 class App extends React.Component{
 	constructor(props){
 		super(props);
 		this.state = {
 			roomID:null,
 			chatFriend:null,
-			socket:null,
+			messages:[],
 		};
+
 	}
 
 	componentDidMount(){
-		this.setState({
-				socket:SocketIoClient('http://127.0.0.1:3002')
-			});
 		
 	}
 
 	setRoom(friend){
-    
-		let roomId = '';
-		if(friend.userId>this.props.userId){
-			roomId='room'+this.props.userId+''+friend.userId;
+    	console.log('setroom',friend.userName);
+		var roomId = '';
+    	console.log('id ',friend.id,this.props.userId);
+		if(friend.id>this.props.userId){
+			roomId='room'+this.props.userId+''+friend.id;
 		}else{
-			roomId='room'+friend.userId+''+this.props.userId;
+			roomId='room'+friend.id+''+this.props.userId;
 		}
+		console.log('roomid',roomId);
 		if(this.state.roomId !== roomId){
 			if(this.state.roomId){
-				this.state.socket.emit('leaveRoom', this.state.roomId, this.props.userId);
+				socket.emit('leaveRoom', this.state.roomId, this.props.userId);
 			}
 
 			if(this.setState.chatFriend)
 				this.state.chatFriend.setSeen_chatting = null;
 
-			this.setState({
-				roomId : roomId,
-				chatFriend : friend,
-			});
-
-			this.state.socket.emit('joinRoom',this.state.roomId, this.props.userId);
+			fetch('http://localhost:3001/messages',
+			{
+	            "method": 'POST',
+	            //"mode": 'no-cors', 
+	            "headers": {
+	              'Content-Type':'application/json',
+	            },
+	            "body": JSON.stringify({collection:roomId})
+	        })
+				.then(data => data.json())
+				.then(data =>{
+					console.log('first load messages', data);
+					this.setState({
+						roomId : roomId,
+						chatFriend : friend,
+						messages : data,
+					});
+				});
+			socket.emit('joinRoom', roomId, this.props.userId);
 		}
 	}
 
@@ -54,9 +69,10 @@ class App extends React.Component{
 			chatRoom = (
 			     	<ChatRoom roomId={this.state.roomId}
 			     			  chatFriend={this.state.chatFriend}
+			     			  messages={this.state.messages}
 			     			  userName={this.props.userName}
 			     			  userId={this.props.userId}
-							  socket={this.state.socket}
+							  socket={socket}
 			     	/>
 				);
 
@@ -70,7 +86,7 @@ class App extends React.Component{
 				    	<FriendList setRoom={this.setRoom}
 									userId={this.props.userId}
 									friends={this.props.friends}
-									socket={this.state.socket}
+									socket={socket}
 						/>
 					</div>
 					<div style={{width:"70%"}}>

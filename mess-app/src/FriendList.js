@@ -24,6 +24,7 @@ function FriendList(props) {
                   });
                 });
 
+                console.log(users);
                 setFriendList(users);
               })
               .catch(err =>{
@@ -40,75 +41,74 @@ function FriendList(props) {
                 setFriendList(newFriendList);
               };
 
-              if(props.socket){
-                props.socket.emit('online', props.userID, friendListIds);
+              
+              props.socket.emit('online', props.userID, friendListIds);
 
-                props.socket.on('I\'m online', (friendId)=>{
-                  whoOn(friendId);
-                  props.socket.emit('I\'m online', props.userId, friendId);
+              props.socket.on('I\'m online', (friendId)=>{
+                whoOn(friendId);
+                props.socket.emit('I\'m online', props.userId, friendId);
+              });
+
+              props.socket.on('friend online', (friendId) =>{
+                whoOn(friendId);
+              });
+
+              props.socket.on('joinRoom', (friendId) =>{
+                friendList.forEach((friend) =>{
+                  if(friend.id===friendId){
+                    friend.chatting = true;
+                  }
                 });
+              });
 
-                props.socket.on('friend online', (friendId) =>{
-                  whoOn(friendId);
+              props.socket.on('online-notRead', (friendId) =>{
+                let newFriendList = friendList.map((user) =>{
+                  if(user.userId===friendId){
+                    user.notRead = user.notRead+1;
+                  }
+                  return user;
                 });
+                setFriendList(newFriendList);
 
-                props.socket.on('joinRoom', (friendId) =>{
-                  friendList.forEach((friend) =>{
-                    if(friend.id===friendId){
-                      friend.chatting = true;
-                    }
-                  });
+              });
+
+              props.socket.on('online-seen', (friendId) =>{
+                friendList.forEach((friend) =>{
+                  if(friend.id===friendId){
+                    friend.seen = 1;
+                    if(friend.setSeen_chatting)
+                      friend.setSeen_chatting(friendId);//is it
+                  }
                 });
+              });
 
-                props.socket.on('online-notRead', (friendId) =>{
-                  let newFriendList = friendList.map((user) =>{
-                    if(user.userId===friendId){
-                      user.notRead = user.notRead+1;
-                    }
-                    return user;
-                  });
-                  setFriendList(newFriendList);
-
+              props.socket.on('leaveChat', (friendId) =>{
+                friendList.forEach((friend) =>{
+                  if(friend.id===friendId){
+                    friend.chatting = false;
+                  }
                 });
+              });
 
-                props.socket.on('online-seen', (friendId) =>{
-                  friendList.forEach((friend) =>{
-                    if(friend.id===friendId){
-                      friend.seen = 1;
-                      if(friend.setSeen_chatting)
-                        friend.setSeen_chatting(friendId);//is it
-                    }
-                  });
+              props.socket.on('offline', (friendId) =>{
+                let newFriendList = friendList.map((user) =>{
+                  if(user.userId===friendId){
+                    user.isOnline = false;
+                    user.chatting = false;
+                  }
+                  return user;
                 });
+                setFriendList(newFriendList);
+              });
 
-                props.socket.on('leaveChat', (friendId) =>{
-                  friendList.forEach((friend) =>{
-                    if(friend.id===friendId){
-                      friend.chatting = false;
-                    }
-                  });
-                });
-
-                props.socket.on('offline', (friendId) =>{
-                  let newFriendList = friendList.map((user) =>{
-                    if(user.userId===friendId){
-                      user.isOnline = false;
-                      user.chatting = false;
-                    }
-                    return user;
-                  });
-                  setFriendList(newFriendList);
-                });
-
-                props.socket.on('disconnect',() =>{
-                  props.socket.emit('offline', props.userId, friendListIds);
-                });
-              }   
+              props.socket.on('disconnect',() =>{
+                props.socket.emit('offline', props.userId, friendListIds);
+              });
             },[]);
             
 
   function handleClick(friend) {
-
+    console.log('click',friend.userName);
     if(friend.notRead>0){
       fetch('http://localhost:3001/seen',
           {
