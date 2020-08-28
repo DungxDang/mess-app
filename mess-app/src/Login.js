@@ -62,6 +62,33 @@ class Login extends React.Component{
 	                .catch(err =>{
 	                  console.log(err);
 	                });
+	             /*   {let condition = {id:3, 'friends.id':2};
+      let update = {'$set':{'friends.$.seen':1}};
+      fetch('http://localhost:3001/seen',
+          {
+                    "method": 'POST',
+                    //"mode": 'no-cors',
+                    "headers": {
+                      'Content-Type':'application/json',
+                    },
+                    "body": JSON.stringify({condition:condition, update:update})
+          })
+          .then(res => res.json())
+            .then(res =>{
+            	console.log('res',res);
+              if(res)
+                if(res.nModified)
+                  console.log('seen-userid:'+2);
+                else
+                  console.log('conditionless-seen-userid:'+2);
+              else{
+                console.log('err-seen-userid:'+2);
+              }
+
+            })
+            .catch((err) =>{
+              console.log(err);
+            });}*/
 
 		event.preventDefault();
 	}

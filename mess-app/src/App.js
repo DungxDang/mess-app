@@ -22,15 +22,12 @@ class App extends React.Component{
 	}
 
 	setRoom(friend){
-    	console.log('setroom',friend.userName);
 		var roomId = '';
-    	console.log('id ',friend.id,this.props.userId);
 		if(friend.id>this.props.userId){
 			roomId='room'+this.props.userId+''+friend.id;
 		}else{
 			roomId='room'+friend.id+''+this.props.userId;
 		}
-		console.log('roomid',roomId);
 		if(this.state.roomId !== roomId){
 			if(this.state.roomId){
 				socket.emit('leaveRoom', this.state.roomId, this.props.userId);
@@ -64,6 +61,8 @@ class App extends React.Component{
 	render(){
 		this.setRoom = this.setRoom.bind(this);
 
+  		var friendListIds = this.props.friends.map((friend) => friend.id);
+
 		var chatRoom = null;
 		if(this.state.chatFriend)
 			chatRoom = (
@@ -86,6 +85,7 @@ class App extends React.Component{
 				    	<FriendList setRoom={this.setRoom}
 									userId={this.props.userId}
 									friends={this.props.friends}
+									friendListIds={friendListIds}
 									socket={socket}
 						/>
 					</div>

@@ -112,10 +112,9 @@ app.post('/seen', (req, res) => {
 	MongoClient.connect(mongodbUrl, {useUnifiedTopology: true}, (err, db) => {
 		if(err) throw err;
 		var dbo = db.db('mess-app');
+		console.log('seen', req.body);
 
-		let condition = {id:req.body.friendId, 'friends.id':req.body.userId};
-		let update = {'$set':{'friends.$.seen':1}};
-		dbo.collection('users').updateOne(condition, update)
+		dbo.collection('users').updateOne(req.body.condition, req.body.update)
 			.then((mRes) =>{
 				res.send(mRes);
 				db.close();
@@ -128,14 +127,12 @@ app.post('/seen', (req, res) => {
 	});
 });
 
-app.post('/seen', (req, res) => {
+app.post('/removeNotRead', (req, res) => {
 	MongoClient.connect(mongodbUrl, {useUnifiedTopology: true}, (err, db) => {
 		if(err) throw err;
 		var dbo = db.db('mess-app');
-
-		condition = {id:req.body.userId, 'friends.id':req.body.friendId};
-		update = {'$set':{'friends.$.notRead':0}};
-		dbo.collection('users').updateOne(condition, update)
+		console.log('not', req.body);
+		dbo.collection('users').updateOne(req.body.condition, req.body.update)
 			.then((mRes) =>{
 				res.send(mRes);
 				db.close();

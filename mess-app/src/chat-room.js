@@ -106,13 +106,28 @@ class Room extends React.Component{
 	                  'Content-Type':'application/json',
 	                },
 	                "body": JSON.stringify( {friendId:this.props.chatFriend.id, userId:this.props.userId})
-	            });
+	            })
+				.then(res => res.json())
+				.then(res =>{
+
+				  if(res)
+				    if(res.nModified)
+				      console.log('removeSeen-userid:'+this.props.userId);
+				    else
+				      console.log('conditionless-removeSeen-userid:'+this.props.userId);
+				  else{
+				    console.log('err-removeSeen-userid:'+this.props.userId);
+				  }
+
+				})
+				.catch((err) =>{
+				  console.log(err);
+				});
 				this.setState({seen:0});
 				this.props.chatFriend.seen = 0;
 			}
-			console.log('newmess',mess,userName);
-			let message = {_id:_id, userName:userName, message:mess}
 
+			let message = {_id:_id, userName:userName, message:mess}
 			this.setState({
 				messages:[...this.state.messages, message]
 			});

@@ -12,13 +12,13 @@ io.on('connection', (socket) => {
 
 	socket.on('online', (userId, friendListIds) =>{
 		socket.join(userId+"");
-		friendListIds.map((friendId) =>{
+		friendListIds.forEach((friendId) =>{
 			socket.to(friendId+'').emit('I\'m online', userId);
 		});
 	});
 
 	socket.on('I\'m online', (userId, friendId) =>{
-		socket.to(friendId+'').emit('friend online', userId);
+		socket.to(friendId+'').emit('friend online too', userId);
 	});
 
 	socket.on('joinRoom', (roomId, userId) =>{
@@ -47,7 +47,7 @@ io.on('connection', (socket) => {
 	});
 
 	socket.on('offline', (userId, friendListIds) =>{
-		friendListIds.map((friendId) =>{
+		friendListIds.forEach((friendId) =>{
 			socket.to(friendId+'').emit('offline', userId);
 		});
 	});
