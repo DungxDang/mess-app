@@ -69,9 +69,81 @@ function NewMess(props){
 	);
 }
 
-function Room(props){
+class Room extends React.Component{
 
-	var [messages, setMessages] = useState(props.messages);
+	constructor(props){
+		super(props);
+		this.state = {
+			messages:this.props.messages,
+			seen:this.props.chatFriend.seen
+		}
+	}
+
+	componentDidUpdate(prevProps){
+		if(this.props.messages!==prevProps.messages){
+			this.setState({
+				messages:this.props.messages
+			});
+
+			this.props.chatFriend.setSeen_chatting = this.setSeen_chatting.bind(this);
+		}
+	}
+
+	setSeen_chatting(id) {
+		if(this.props.chatFriend.id===id)
+			this.setState({seen:1});
+	}
+
+	componentDidMount(){
+
+		this.props.socket.on('message', (_id, userName, mess) =>{
+			if(this.props.chatFriend.seen){
+				fetch('http://localhost:3001/removeSeen',
+				{
+	                "method": 'POST',
+	                //"mode": 'no-cors', 
+	                "headers": {
+	                  'Content-Type':'application/json',
+	                },
+	                "body": JSON.stringify( {friendId:this.props.chatFriend.id, userId:this.props.userId})
+	            });
+				this.setState({seen:0});
+				this.props.chatFriend.seen = 0;
+			}
+			console.log('newmess',mess,userName);
+			let message = {_id:_id, userName:userName, message:mess}
+
+			this.setState({
+				messages:[...this.state.messages, message]
+			});
+		});
+		
+
+	}
+	
+	render(){
+
+		const list = this.state.messages.map((e) =>
+						(
+							<dl key={e._id}>
+								<dt>{e.userName}</dt> 
+								<dd>{e.message}</dd>
+							</dl>
+						)
+					);
+
+		return(
+			<div>
+				<div>{list}</div>
+				<div>{this.state.seen? 'seen' : ''}</div>
+			</div>
+		);
+	}
+}
+
+/*function Room(props){
+
+	const [messages, setMessages] = useState(props.messages);
 	const [seen, setSeen] = useState(props.chatFriend.seen);
 
 	useEffect((privMessages) => {
@@ -103,10 +175,7 @@ function Room(props){
 			setSeen(1);
 	}
 	props.chatFriend.setSeen_chatting = setSeen_chatting;
-
-	function addNewMessage(message){
-		setMessages([...messages, message]);
-	}
+	console.log('this',Room.messages);
 
 	useEffect(() => {
 
@@ -127,7 +196,7 @@ function Room(props){
 				console.log('newmess',mess,userName);
 				let message = {_id:_id, userName:userName, message:mess}
 
-				addNewMessage(message);
+				setMessages([...messages, message]);
 			});
 		
 
@@ -141,7 +210,7 @@ function Room(props){
 			<div>{seen? 'seen' : ''}</div>
 		</div>
 	);
-}
+}*/
 
 function ChatRoom(props) {
 
