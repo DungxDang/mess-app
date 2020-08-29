@@ -8,7 +8,60 @@ class FriendList extends React.Component {
     }
   }
 
+  componentDidUpdate(preProps){
+    if(preProps.friends!==this.props.friends)
+    {
+        fetch('http://localhost:3001/friendList',
+          {
+            "method": 'POST',
+            //"mode": 'no-cors', 
+            "headers": {
+              'Content-Type':'application/json',
+            },
+            "body": JSON.stringify({friendListIds:this.props.friendListIds}),
+          })
+            .then(data => data.json())
+            .then(users =>{
+              this.props.friends.forEach((friend) =>{
+                users.forEach((user) =>{
+                  if(user.id===friend.id){
+                    user.notRead = friend.notRead;
+                    user.seen = friend.seen;
+                  }
+                });
+              });
+
+              console.log(users);
+              this.setState({
+                friendList:users
+              });
+              var currentChatFriend = this.props.getChatFriend();
+              if(currentChatFriend){
+                var exist = false;
+                users.forEach((friend) =>{
+                  if(friend.id===currentChatFriend.id){
+                    exist = true;
+                    console.log('refresh-didupdate');
+                    this.handleClick(friend, true);
+                  }
+                });
+                if(!exist)
+                  this.props.setStateApp({
+                    roomID:null,
+                    chatFriend:null,
+                    messages:[],
+                  });
+              }
+            })
+            .catch(err =>{
+              console.log(err);
+            });
+
+    }
+  }
+
   componentDidMount(){
+          console.log('fl mount');
               fetch('http://localhost:3001/friendList',{
                 "method": 'POST',
                 //"mode": 'no-cors', 
@@ -38,9 +91,11 @@ class FriendList extends React.Component {
               });
 
               let whoOn = (friendId) =>{
+                console.log('whoOn', friendId);
                 let newFriendList = this.state.friendList.map((user) =>{
-                  if(user.userId===friendId){
+                  if(user.id===friendId){
                     user.isOnline = true;
+                    console.log('fonline',friendId);
                   }
                   return user;
                 });
@@ -49,21 +104,44 @@ class FriendList extends React.Component {
                 });
               };
 
-              
-              this.props.socket.emit('online', this.props.userID, this.props.friendListIds);
+              this.props.socket.emit('identity',
+                {
+                  userId:this.props.userId,
+                  friendListIds:this.props.friendListIds
+                }
+              );
+
+              this.props.socket.emit('online', this.props.userId, this.props.friendListIds);
 
               this.props.socket.on('I\'m online', (friendId)=>{
+                console.log('fonline',friendId);
                 whoOn(friendId);
-                this.props.socket.emit('I\'m online', this.props.userId, friendId);
+                this.props.socket.emit('I\'m online too', this.props.userId, friendId);
               });
 
               this.props.socket.on('friend online too', (friendId) =>{
+                console.log('fonline too', friendId);
                 whoOn(friendId);
               });
 
-              this.props.socket.on('joinRoom', (friendId) =>{
+              this.props.socket.on('joinRoom', (friendId, roomId) =>{
+                console.log('fjoinroom', friendId);
                 this.state.friendList.forEach((friend) =>{
                   if(friend.id===friendId){
+
+                console.log('fjoinedroom', friendId);
+                    friend.chatting = true;
+                    this.props.socket.emit('iJoinedRoomToo', this.props.userId, roomId);
+                  }
+                });
+              });
+
+              this.props.socket.on('iJoinedRoomToo', (friendId) =>{
+                console.log('iJoinedRoomToo', friendId);
+                this.state.friendList.forEach((friend) =>{
+                  if(friend.id===friendId){
+
+                console.log('iJoinedRoomToocor', friendId);
                     friend.chatting = true;
                   }
                 });
@@ -71,7 +149,7 @@ class FriendList extends React.Component {
 
               this.props.socket.on('online-notRead', (friendId) =>{
                 let newFriendList = this.state.friendList.map((user) =>{
-                  if(user.userId===friendId){
+                  if(user.id===friendId){
                     user.notRead = user.notRead+1;
                   }
                   return user;
@@ -101,8 +179,10 @@ class FriendList extends React.Component {
               });
 
               this.props.socket.on('offline', (friendId) =>{
+                console.log('foffline', friendId);
                 let newFriendList = this.state.friendList.map((user) =>{
-                  if(user.userId===friendId){
+                  if(user.id===friendId){
+                console.log('foffline', friendId);
                     user.isOnline = false;
                     user.chatting = false;
                   }
@@ -113,13 +193,47 @@ class FriendList extends React.Component {
                 });
               });
 
-              this.props.socket.on('disconnect',() =>{
-                this.props.socket.emit('offline', this.props.userId, this.props.friendListIds);
+              /*this.props.socket.once('disconnect', (sth) =>{
+                  console.log('oncedis', this.props.userId);
+                  this.props.socket.emit('offline', this.props.userId, this.props.friendListIds);
+              });*/
+
+              this.props.socket.on('reconnect', (attemptNumber) => {
+
+                console.log('reconnect', this.props.userId, attemptNumber);
+                this.props.socket.emit('identity',
+                  {userId:this.props.userId, friendListIds:this.props.friendListIds}
+                );
+
+                this.props.socket.emit('online', this.props.userId, this.props.friendListIds);
+
+                this.props.refresh();
+              });
+
+              this.props.socket.on('reconnecting', (attemptNumber) => {
+                console.log('reconnecting', this.props.userId, attemptNumber);
+              });
+
+              this.props.socket.on('disconnect',(reason) => {
+                if (reason === 'io client disconnect') {
+                  console.log('io client disconnect', this.props.userId);
+                }
+                if (reason === 'io server disconnect') {
+                  console.log('io server disconnect', this.props.userId);
+                }
+                if (reason === 'ping timeout') {
+                  console.log('ping timeout', this.props.userId);
+                }
+
+                if (reason === 'transport close') {
+                  console.log('transport close', this.props.userId);
+                }
+                  console.log('disconnect', this.props.userId, reason);
               });
   }
             
 
-  handleClick(friend) {
+  handleClick(friend, isRefresh) {
     console.log('click',friend.userName);
     if(friend.notRead>0){
 
@@ -219,7 +333,7 @@ class FriendList extends React.Component {
       }
     }
 
-    this.props.setRoom(friend);
+    this.props.setRoom(friend, isRefresh);
   }
 
   render(){
@@ -228,7 +342,7 @@ class FriendList extends React.Component {
 
     const list = this.state.friendList.map((friend) =>{
       return(
-        <div key={friend.id} onClick={() => this.handleClick(friend)}>
+        <div key={friend.id} onClick={() => this.handleClick(friend, false)}>
           <h6>
             {friend.userName}
             {friend.notRead>0? '('+friend.notRead+')' : ''}

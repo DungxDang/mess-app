@@ -10,21 +10,33 @@ const io = require('socket.io')(http);
 io.on('connection', (socket) => {
 	console.log('a user connected:'+socket.id);
 
+	socket.on('identity', (identity) =>{
+		console.log('identity', identity);
+		socket.identity = identity;
+	});
+
 	socket.on('online', (userId, friendListIds) =>{
 		socket.join(userId+"");
+		console.log('joinprivroom',userId);
 		friendListIds.forEach((friendId) =>{
 			socket.to(friendId+'').emit('I\'m online', userId);
 		});
 	});
 
-	socket.on('I\'m online', (userId, friendId) =>{
+	socket.on('I\'m online too', (userId, friendId) =>{
+		console.log('connectonline', userId, friendId);
 		socket.to(friendId+'').emit('friend online too', userId);
 	});
 
 	socket.on('joinRoom', (roomId, userId) =>{
-		console.log(roomId, userId);
+		console.log('joinroom',roomId, userId);
 		socket.join(roomId);
-		socket.to(roomId).emit('joinRoom', userId);
+		socket.to(roomId).emit('joinRoom', userId, roomId);
+	});
+
+	socket.on('iJoinedRoomToo', (userId, roomId) =>{
+		console.log('iJoinedRoomToo',roomId, userId);
+		socket.to(roomId).emit('iJoinedRoomToo', userId);
 	});
 
 	socket.on('leaveRoom',(roomId, userId) => {
@@ -46,13 +58,27 @@ io.on('connection', (socket) => {
 		socket.to(friendId+"").emit('online-seen', userId);
 	});
 
-	socket.on('offline', (userId, friendListIds) =>{
+/*	socket.on('offline', (userId, friendListIds) =>{
+                console.log('offline', userId);
 		friendListIds.forEach((friendId) =>{
 			socket.to(friendId+'').emit('offline', userId);
 		});
+	});*/
+
+	socket.on('disconnecting', (reason) =>{
+		if(reason){}///
+
+        if(socket.identity){
+            console.log('offline', socket.identity.userId);
+			socket.identity.friendListIds.forEach((friendId) =>{
+				socket.to(friendId+'').emit('offline', socket.identity.userId);
+			});
+		}else{
+			console.log('identity undefined');
+		}
 	});
 
-	socket.on('disconnect', () =>{
+	socket.on('disconnect', (reason) =>{
 		console.log('user disconnect: '+ socket.id);
 	});
 });

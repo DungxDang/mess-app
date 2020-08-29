@@ -8,7 +8,6 @@ class Login extends React.Component{
 			password:'',
 			infor:''
 		};
-		this.handleSubmit = this.handleSubmit.bind(this);
 	}
 
 	handleChangeUSerName(event){
@@ -95,6 +94,7 @@ class Login extends React.Component{
 
 	render(){
 
+		this.handleSubmit = this.handleSubmit.bind(this);
 		this.handleChangeUSerName = this.handleChangeUSerName.bind(this);
 		this.handleChangePassword = this.handleChangePassword.bind(this);
 		return(

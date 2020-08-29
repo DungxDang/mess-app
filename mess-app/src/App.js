@@ -21,14 +21,18 @@ class App extends React.Component{
 		
 	}
 
-	setRoom(friend){
+	getChatFriend(){
+		return this.state.chatFriend;
+	}
+
+	setRoom(friend, isRefresh){
 		var roomId = '';
 		if(friend.id>this.props.userId){
 			roomId='room'+this.props.userId+''+friend.id;
 		}else{
 			roomId='room'+friend.id+''+this.props.userId;
 		}
-		if(this.state.roomId !== roomId){
+		if(isRefresh || this.state.roomId !== roomId){
 			if(this.state.roomId){
 				socket.emit('leaveRoom', this.state.roomId, this.props.userId);
 			}
@@ -58,8 +62,14 @@ class App extends React.Component{
 		}
 	}
 
+	setStateApp(state){
+		this.setState(state);
+	}
+
 	render(){
 		this.setRoom = this.setRoom.bind(this);
+		this.getChatFriend = this.getChatFriend.bind(this);
+		this.setStateApp = this.setStateApp.bind(this);
 
   		var friendListIds = this.props.friends.map((friend) => friend.id);
 
@@ -86,6 +96,9 @@ class App extends React.Component{
 									userId={this.props.userId}
 									friends={this.props.friends}
 									friendListIds={friendListIds}
+									getChatFriend={this.getChatFriend}
+									setSate={this.setStateApp}
+									refresh={this.props.refresh}
 									socket={socket}
 						/>
 					</div>

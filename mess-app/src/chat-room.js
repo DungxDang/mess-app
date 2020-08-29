@@ -6,7 +6,7 @@ function NewMess(props){
 	const [text, setText] = useState('');
 
 	function handleSubmit(event) {
-		
+		console.log('chatFriend', props.chatFriend);
 		setText('');
 		if(!props.chatFriend.chatting){
 			let condition = {id:props.chatFriend.id, 'friends.id':props.userId};
@@ -82,7 +82,8 @@ class Room extends React.Component{
 	componentDidUpdate(prevProps){
 		if(this.props.messages!==prevProps.messages){
 			this.setState({
-				messages:this.props.messages
+				messages:this.props.messages,
+				seen:this.props.chatFriend.seen
 			});
 
 			this.props.chatFriend.setSeen_chatting = this.setSeen_chatting.bind(this);
