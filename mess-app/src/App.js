@@ -33,7 +33,7 @@ class App extends React.Component{
 			roomId='room'+friend.id+''+this.props.userId;
 		}
 		if(isRefresh || this.state.roomId !== roomId){
-			if(this.state.roomId){
+			if(isRefresh || this.state.roomId){
 				socket.emit('leaveRoom', this.state.roomId, this.props.userId);
 			}
 

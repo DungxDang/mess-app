@@ -91,7 +91,7 @@ class FriendList extends React.Component {
               });
 
               let whoOn = (friendId) =>{
-                console.log('whoOn', friendId);
+                console.log('whoOn', friendId);// problem here async
                 let newFriendList = this.state.friendList.map((user) =>{
                   if(user.id===friendId){
                     user.isOnline = true;
@@ -161,11 +161,15 @@ class FriendList extends React.Component {
               });
 
               this.props.socket.on('online-seen', (friendId) =>{
+                      console.log('online-seen1', friendId);
                 this.state.friendList.forEach((friend) =>{
                   if(friend.id===friendId){
                     friend.seen = 1;
-                    if(friend.setSeen_chatting)
-                      friend.setSeen_chatting(friendId);//is it
+                      console.log('online-seen2',friend);
+                    if(friend.setSeen_chatting){// here
+                      console.log('online-seen3',friendId);
+                      friend.setSeen_chatting(friendId);
+                    }
                   }
                 });
               });

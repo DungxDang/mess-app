@@ -6,7 +6,6 @@ function NewMess(props){
 	const [text, setText] = useState('');
 
 	function handleSubmit(event) {
-		console.log('chatFriend', props.chatFriend);
 		setText('');
 		if(!props.chatFriend.chatting){
 			let condition = {id:props.chatFriend.id, 'friends.id':props.userId};
