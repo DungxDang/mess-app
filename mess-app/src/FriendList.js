@@ -35,6 +35,9 @@ class FriendList extends React.Component {
               this.setState({
                 friendList:users
               });
+
+              this.props.socket.emit('online', this.props.userId, this.props.friendListIds);
+
               var currentChatFriend = this.props.getChatFriend();
               if(currentChatFriend){
                 var exist = false;
@@ -61,7 +64,6 @@ class FriendList extends React.Component {
   }
 
   componentDidMount(){
-          console.log('fl mount');
               fetch('http://localhost:3001/friendList',{
                 "method": 'POST',
                 //"mode": 'no-cors', 
@@ -85,13 +87,22 @@ class FriendList extends React.Component {
                 this.setState({
                   friendList:users
                 });
-              })
-              .catch(err =>{
-                console.log(err);
-              });
+
+                this.props.socket.emit('identity',
+                  {
+                    userId:this.props.userId,
+                    friendListIds:this.props.friendListIds
+                  }
+                );
+
+                this.props.socket.emit('online', this.props.userId, this.props.friendListIds);
+                })
+                .catch(err =>{
+                  console.log(err);
+                });
 
               let whoOn = (friendId) =>{
-                console.log('whoOn', friendId);// problem here async
+                console.log('whoOn', friendId);
                 let newFriendList = this.state.friendList.map((user) =>{
                   if(user.id===friendId){
                     user.isOnline = true;
@@ -103,15 +114,6 @@ class FriendList extends React.Component {
                   friendList:newFriendList
                 });
               };
-
-              this.props.socket.emit('identity',
-                {
-                  userId:this.props.userId,
-                  friendListIds:this.props.friendListIds
-                }
-              );
-
-              this.props.socket.emit('online', this.props.userId, this.props.friendListIds);
 
               this.props.socket.on('I\'m online', (friendId)=>{
                 console.log('fonline',friendId);
@@ -166,7 +168,7 @@ class FriendList extends React.Component {
                   if(friend.id===friendId){
                     friend.seen = 1;
                       console.log('online-seen2',friend);
-                    if(friend.setSeen_chatting){// here
+                    if(friend.setSeen_chatting){
                       console.log('online-seen3',friendId);
                       friend.setSeen_chatting(friendId);
                     }
@@ -208,8 +210,6 @@ class FriendList extends React.Component {
                 this.props.socket.emit('identity',
                   {userId:this.props.userId, friendListIds:this.props.friendListIds}
                 );
-
-                this.props.socket.emit('online', this.props.userId, this.props.friendListIds);
 
                 this.props.refresh();
               });
@@ -347,19 +347,20 @@ class FriendList extends React.Component {
     const list = this.state.friendList.map((friend) =>{
       return(
         <div key={friend.id} onClick={() => this.handleClick(friend, false)}>
-          <h6>
+          <h4>
             {friend.userName}
+          </h4>
+          <h6>
             {friend.notRead>0? '('+friend.notRead+')' : ''}
-
           </h6>
-          {friend.isOnline? 'Online':''}
+          <h6>{friend.isOnline? 'Online':''}</h6>
         </div>
       );
     });
 
     return (
-      <div>
-        <div> <h4>FriendList</h4> </div>
+      <div style={{marginLeft:'8px'}}>
+        <div> <h3>Friend List</h3> </div>
         <div>{list}</div>
       </div>
     );

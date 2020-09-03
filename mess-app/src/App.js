@@ -37,7 +37,7 @@ class App extends React.Component{
 				socket.emit('leaveRoom', this.state.roomId, this.props.userId);
 			}
 
-			if(this.setState.chatFriend)
+			if(this.state.chatFriend)
 				this.state.chatFriend.setSeen_chatting = null;
 
 			fetch('http://localhost:3001/messages',
@@ -57,8 +57,9 @@ class App extends React.Component{
 						chatFriend : friend,
 						messages : data,
 					});
+
+					socket.emit('joinRoom', roomId, this.props.userId);
 				});
-			socket.emit('joinRoom', roomId, this.props.userId);
 		}
 	}
 
@@ -87,10 +88,14 @@ class App extends React.Component{
 
 		return (
 			<div>
-				<div><h2>{this.props.userName}</h2></div>
+				<div style={{borderBottom: '2px solid #496D9C', paddingLeft:'8px'}}>
+					<h2>{this.props.userName}</h2>
+				</div>
 				
-				<div style={{width:"100%"}}>
-					<div style={{width:"30%"}}>
+				<div style={{width:"100%",  display: 'table'}}>
+					<div style={this.state.chatFriend? {width:"30%", display: 'table-cell',
+														borderRight: '2px solid #496D9C'} : 
+														{width:"30%", display: 'table-cell'}}>
 					
 				    	<FriendList setRoom={this.setRoom}
 									userId={this.props.userId}
@@ -102,7 +107,7 @@ class App extends React.Component{
 									socket={socket}
 						/>
 					</div>
-					<div style={{width:"70%"}}>
+					<div style={{width:"70%", display: 'table-cell'}}>
 						{chatRoom}
 					</div>
 				</div>
