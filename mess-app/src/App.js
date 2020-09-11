@@ -3,6 +3,7 @@ import SocketIoClient from 'socket.io-client';
 import './App.css';
 import ChatRoom from './chat-room';
 import FriendList from './FriendList';
+import Groups from './Groups';
 
 const socket = SocketIoClient('http://127.0.0.1:3002');
 
@@ -73,6 +74,7 @@ class App extends React.Component{
 		this.setStateApp = this.setStateApp.bind(this);
 
   		var friendListIds = this.props.friends.map((friend) => friend.id);
+  		var groupIds = this.props.groups.map((group) => group.id);
 
 		var chatRoom = null;
 		if(this.state.chatFriend)
@@ -94,7 +96,8 @@ class App extends React.Component{
 				
 				<div style={{width:"100%",  display: 'table'}}>
 					<div style={this.state.chatFriend? {width:"30%", display: 'table-cell',
-														borderRight: '2px solid #496D9C'} : 
+														borderRight: '2px solid #496D9C'} 
+														: 
 														{width:"30%", display: 'table-cell'}}>
 					
 				    	<FriendList setRoom={this.setRoom}
@@ -102,11 +105,23 @@ class App extends React.Component{
 									friends={this.props.friends}
 									friendListIds={friendListIds}
 									getChatFriend={this.getChatFriend}
-									setSate={this.setStateApp}
+									setSatesetStateApp={this.setStateApp}
 									refresh={this.props.refresh}
 									socket={socket}
 						/>
+
+				    	<Groups 	setRoom={this.setRoom}
+									userId={this.props.userId}
+									groups={this.props.groups}
+									groupIds={groupIds}
+									getChatFriend={this.getChatFriend}
+									setStateApp={this.setStateApp}
+									refresh={this.props.refresh}
+									socket={socket}
+						/>
+
 					</div>
+
 					<div style={{width:"70%", display: 'table-cell'}}>
 						{chatRoom}
 					</div>

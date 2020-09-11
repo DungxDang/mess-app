@@ -15,6 +15,11 @@ io.on('connection', (socket) => {
 		socket.identity = identity;
 	});
 
+	socket.on('identity', (identity) =>{
+		console.log('groups-identity', identity);
+		socket.groupsIdentity = identity;
+	});
+
 	socket.on('online', (userId, friendListIds) =>{
 		socket.join(userId+"");
 		console.log('joinprivroom',userId);
@@ -75,6 +80,17 @@ io.on('connection', (socket) => {
 			});
 		}else{
 			console.log('identity undefined');
+		}
+
+        if(socket.groupsIdentity){
+            console.log('group-offline', socket.identity.groups);
+			socket.groupsIdentity.groups.forEach((group) =>{
+				group.memberIds.forEach(memberId =>{
+					socket.to(memberId+'').emit('group-offline', group.id, socket.identity.userId);
+				});
+			});
+		}else{
+			console.log('groups-identity undefined');
 		}
 	});
 

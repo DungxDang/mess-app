@@ -29,6 +29,7 @@ app.post('/login', jsonParser, function(req, res){
 					db.close();
 				})
 				.catch((err =>{
+					res.send(0);
 					console.log(err);
 				}));
 				
@@ -44,6 +45,42 @@ app.post('/friendList', function(req, res){
 		else{
 			var dbo = db.db('mess-app');
 			dbo.collection('users').find({id : {$in:req.body.friendListIds}}, {_id:0, friends:0})
+				.toArray((err, data) => {
+					if(err)
+						console.log(err);
+					else
+						res.send(data);
+					db.close();
+				});
+		}
+	});
+
+});
+
+app.post('/groups', function(req, res){
+	MongoClient.connect(mongodbUrl, {useUnifiedTopology: true}, (err, db) => {
+		if(err) console.log(err);
+		else{
+			var dbo = db.db('mess-app');
+			dbo.collection('users').find({id : {$in:req.body.groupIds}})
+				.toArray((err, data) => {
+					if(err)
+						console.log(err);
+					else
+						res.send(data);
+					db.close();
+				});
+		}
+	});
+
+});
+
+app.post('/members', function(req, res){
+	MongoClient.connect(mongodbUrl, {useUnifiedTopology: true}, (err, db) => {
+		if(err) console.log(err);
+		else{
+			var dbo = db.db('mess-app');
+			dbo.collection('users').find({id : {$in:req.body.memberIds}}, {_id:0, friends:0})
 				.toArray((err, data) => {
 					if(err)
 						console.log(err);
@@ -170,12 +207,34 @@ app.post('/removeSeen', (req, res) => {
 	console.log('Listening on 3001');
 });
 /*db.users.insertMany([
-{ id:1, userName:'user1', password:'1234', friends: [ {id:2,notRead:0,seen:0}, {id:3,notRead:0,seen:0}, {id:4,notRead:0,seen:0}, {id:5,notRead:0,seen:0}, {id:6,notRead:0,seen:0} ] },
-{ id:2, userName:'user2', password:'1234', friends: [ {id:1,notRead:0,seen:0}, {id:3,notRead:0,seen:0}, {id:4,notRead:0,seen:0}, {id:5,notRead:0,seen:0}, {id:6,notRead:0,seen:0} ] },
-{ id:3, userName:'user3', password:'1234', friends: [ {id:2,notRead:0,seen:0}, {id:1,notRead:0,seen:0}, {id:4,notRead:0,seen:0}, {id:5,notRead:0,seen:0}, {id:6,notRead:0,seen:0} ] },
-{ id:4, userName:'user4', password:'1234', friends: [ {id:2,notRead:0,seen:0}, {id:3,notRead:0,seen:0}, {id:1,notRead:0,seen:0}, {id:5,notRead:0,seen:0}, {id:6,notRead:0,seen:0} ] },
-{ id:5, userName:'user5', password:'1234', friends: [ {id:2,notRead:0,seen:0}, {id:3,notRead:0,seen:0}, {id:4,notRead:0,seen:0}, {id:1,notRead:0,seen:0}, {id:6,notRead:0,seen:0} ] },
-{ id:6, userName:'user6', password:'1234', friends: [ {id:2,notRead:0,seen:0}, {id:3,notRead:0,seen:0}, {id:4,notRead:0,seen:0}, {id:5,notRead:0,seen:0}, {id:1,notRead:0,seen:0} ] },
+{ _id:1, userName:'user1', password:'1234', friends: [ {id:2,notRead:0,seen:0}, {id:3,notRead:0,seen:0},
+ {id:4,notRead:0,seen:0}, {id:5,notRead:0,seen:0}, {id:6,notRead:0,seen:0} ], 
+	groups:[{id:1, notRead:0, seen:[]}, {groups:[id:2, notRead:0, seen:[]}]
+ },
+{ _id:2, userName:'user2', password:'1234', friends: [ {id:1,notRead:0,seen:0}, {id:3,notRead:0,seen:0}, 
+{id:4,notRead:0,seen:0}, {id:5,notRead:0,seen:0}, {id:6,notRead:0,seen:0} ], 
+	groups:[{id:1, notRead:0, seen:[]}, {groups:[id:2, notRead:0, seen:[]}]
+},
+{ _id:3, userName:'user3', password:'1234', friends: [ {id:2,notRead:0,seen:0}, {id:1,notRead:0,seen:0}, 
+{id:4,notRead:0,seen:0}, {id:5,notRead:0,seen:0}, {id:6,notRead:0,seen:0} ], 
+	groups:[{id:1, notRead:0, seen:[]}, {groups:[id:2, notRead:0, seen:[]}]
+},
+{ _id:4, userName:'user4', password:'1234', friends: [ {id:2,notRead:0,seen:0}, {id:3,notRead:0,seen:0}, 
+{id:1,notRead:0,seen:0}, {id:5,notRead:0,seen:0}, {id:6,notRead:0,seen:0} ], 
+	groups:[{id:1, notRead:0, seen:[]}, {groups:[id:2, notRead:0, seen:[]}]
+},
+{ _id:5, userName:'user5', password:'1234', friends: [ {id:2,notRead:0,seen:0}, {id:3,notRead:0,seen:0}, 
+{id:4,notRead:0,seen:0}, {id:1,notRead:0,seen:0}, {id:6,notRead:0,seen:0} ], 
+	groups:[{id:1, notRead:0, seen:[]},]
+},
+{ _id:6, userName:'user6', password:'1234', friends: [ {id:2,notRead:0,seen:0}, {id:3,notRead:0,seen:0}, 
+{id:4,notRead:0,seen:0}, {id:5,notRead:0,seen:0}, {id:1,notRead:0,seen:0} ], 
+	groups:[{id:1, notRead:0, seen:[]},]
+},
+{ _id:7, userName:'user7', password:'1234', friends: [], 
+	groups:[{id:1, notRead:0, seen:[]}, {groups:[id:2, notRead:0, seen:[]}]
+},
+
 ]);
 db.users.updateOne(
    { id: 4, "friends.id": 2 },
@@ -186,4 +245,10 @@ db.users.updateOne(
    { $set: { "friends.$.notRead" : 0 } }
 )
 db.users.find({id:4})
+
+db.groups.insertMany([
+{ _id:1, groupName:'group1', memberIds:[1,2,3,4,5,6,7]},
+{ _id:2, groupName:'group1', memberIds:[1,2,3,4,7]}
+]);
+
 */

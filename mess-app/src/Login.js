@@ -53,10 +53,13 @@ class Login extends React.Component{
 									password:''
 								});
 						else
-							this.setState({
-								infor:'User name or password incorrect',
-								password:''
-							});
+							if(res===0)
+								console.log('login user error');
+							else
+								this.setState({
+									infor:'User name or password incorrect',
+									password:''
+								});
 					})
 	                .catch(err =>{
 	                  console.log(err);

@@ -1,59 +1,84 @@
 import React from 'react';
 
-class FriendList extends React.Component {
+class Groups extends React.Component {
   constructor(props){
     super(props);
     this.state = {
-      friendList : [],
+      groups : [],
     }
   }
 
-  componentDidUpdate(preProps){
-    if(preProps.friends!==this.props.friends)
-    {
-        fetch('http://localhost:3001/friendList',
+  loadMembers(groups){
+
+    groups.forEach((group) =>{
+        fetch('http://localhost:3001/members',
           {
             "method": 'POST',
             //"mode": 'no-cors', 
             "headers": {
               'Content-Type':'application/json',
             },
-            "body": JSON.stringify({friendListIds:this.props.friendListIds}),
+            "body": JSON.stringify({memberIds:group.memberIds}),
           })
             .then(data => data.json())
-            .then(users =>{
+            .then(members =>{
+              group.members = members;
+            })
+            .catch(err =>{
+              console.log(err);
+            });
 
-              this.props.socket.emit('online', this.props.userId, this.props.friendListIds);
+    });
+  }
 
-              this.props.friends.forEach((friend) =>{
-                users.forEach((user) =>{
-                  if(user.id===friend.id){
-                    user.notRead = friend.notRead;
-                    user.seen = friend.seen;
+  componentDidUpdate(preProps){
+    if(preProps.groups!==this.props.groups)
+    {
+        fetch('http://localhost:3001/groups',
+          {
+            "method": 'POST',
+            //"mode": 'no-cors', 
+            "headers": {
+              'Content-Type':'application/json',
+            },
+            "body": JSON.stringify({groupIds:this.props.groupIds}),
+          })
+            .then(data => data.json())
+            .then(groups =>{
+
+              this.props.socket.emit('online', this.props.userId, this.props.groupsIds);//here
+
+              this.props.groups.forEach((group) =>{
+                groups.forEach((g) =>{
+                  if(g.id===group.id){
+                    g.notRead = group.notRead;
+                    g.seen = group.seen;
                   }
                 });
               });
 
-              console.log(users);
+              console.log(groups);
               this.setState({
-                friendList:users
+                groups:groups
               });
 
-              this.props.socket.emit('identity',
+              this.props.socket.emit('groups-identity',
                 {
                   userId:this.props.userId,
-                  friendListIds:this.props.friendListIds
+                  groups:this.props.groups
                 }
               );
+
+              this.loadMembers(groups);
 
               var currentChatFriend = this.props.getChatFriend();
               if(currentChatFriend){
                 var exist = false;
-                users.forEach((friend) =>{
-                  if(friend.id===currentChatFriend.id){
+                groups.forEach((group) =>{
+                  if(group.id===currentChatFriend.id){
                     exist = true;
-                    console.log('refresh-didupdate');
-                    this.handleClick(friend, true);
+                    console.log('groups-refresh-didupdate');
+                    this.handleClick(group, true);
                   }
                 });
                 if(!exist)
@@ -72,37 +97,39 @@ class FriendList extends React.Component {
   }
 
   componentDidMount(){
-              fetch('http://localhost:3001/friendList',{
+              fetch('http://localhost:3001/groups',{
                 "method": 'POST',
                 //"mode": 'no-cors', 
                 "headers": {
                   'Content-Type':'application/json',
                 },
-                "body": JSON.stringify({friendListIds:this.props.friendListIds}),
+                "body": JSON.stringify({groupsIds:this.props.groupsIds}),
               })
               .then(data => data.json())
-              .then(users =>{
+              .then(groups =>{
 
-                this.props.socket.emit('online', this.props.userId, this.props.friendListIds);
-                
-                this.props.friends.forEach((friend) =>{
-                  users.forEach((user) =>{
-                    if(user.id===friend.id){
-                      user.notRead = friend.notRead;
-                      user.seen = friend.seen;
+                this.props.socket.emit('online', this.props.userId, this.props.groupsIds);
+
+                this.props.groups.forEach((group) =>{
+                  groups.forEach((g) =>{
+                    if(g.id===group.id){
+                      g.notRead = group.notRead;
+                      g.seen = group.seen;
                     }
                   });
                 });
 
-                console.log(users);
+                console.log(groups);
                 this.setState({
-                  friendList:users
+                  groups:groups
                 });
 
-                this.props.socket.emit('identity',
+                this.loadMembers(groups);
+
+                this.props.socket.emit('groups-identity',
                   {
                     userId:this.props.userId,
-                    friendListIds:this.props.friendListIds
+                    groups:this.props.groups;
                   }
                 );
 
@@ -113,7 +140,7 @@ class FriendList extends React.Component {
 
               let whoOn = (friendId) =>{
                 console.log('whoOn', friendId);
-                let newFriendList = this.state.friendList.map((user) =>{
+                let newgroups = this.state.groups.map((user) =>{
                   if(user.id===friendId){
                     user.isOnline = true;
                     console.log('fonline',friendId);
@@ -121,7 +148,7 @@ class FriendList extends React.Component {
                   return user;
                 });
                 this.setState({
-                  friendList:newFriendList
+                  groups:newgroups
                 });
               };
 
@@ -138,7 +165,7 @@ class FriendList extends React.Component {
 
               this.props.socket.on('joinRoom', (friendId, roomId) =>{
                 console.log('fjoinroom', friendId);
-                this.state.friendList.forEach((friend) =>{
+                this.state.groups.forEach((friend) =>{
                   if(friend.id===friendId){
 
                 console.log('fjoinedroom', friendId);
@@ -150,7 +177,7 @@ class FriendList extends React.Component {
 
               this.props.socket.on('iJoinedRoomToo', (friendId) =>{
                 console.log('iJoinedRoomToo', friendId);
-                this.state.friendList.forEach((friend) =>{
+                this.state.groups.forEach((friend) =>{
                   if(friend.id===friendId){
 
                 console.log('iJoinedRoomToocor', friendId);
@@ -160,21 +187,21 @@ class FriendList extends React.Component {
               });
 
               this.props.socket.on('online-notRead', (friendId) =>{
-                let newFriendList = this.state.friendList.map((user) =>{
+                let newgroups = this.state.groups.map((user) =>{
                   if(user.id===friendId){
                     user.notRead = user.notRead+1;
                   }
                   return user;
                 });
                 this.setState({
-                  friendList:newFriendList
+                  groups:newgroups
                 });
 
               });
 
               this.props.socket.on('online-seen', (friendId) =>{
                       console.log('online-seen1', friendId);
-                this.state.friendList.forEach((friend) =>{
+                this.state.groups.forEach((friend) =>{
                   if(friend.id===friendId){
                     friend.seen = 1;
                       console.log('online-seen2',friend);
@@ -187,7 +214,7 @@ class FriendList extends React.Component {
               });
 
               this.props.socket.on('leaveChat', (friendId) =>{
-                this.state.friendList.forEach((friend) =>{
+                this.state.groups.forEach((friend) =>{
                   if(friend.id===friendId){
                     friend.chatting = false;
                   }
@@ -196,7 +223,7 @@ class FriendList extends React.Component {
 
               this.props.socket.on('offline', (friendId) =>{
                 console.log('foffline', friendId);
-                let newFriendList = this.state.friendList.map((user) =>{
+                let newgroups = this.state.groups.map((user) =>{
                   if(user.id===friendId){
                 console.log('foffline', friendId);
                     user.isOnline = false;
@@ -205,20 +232,58 @@ class FriendList extends React.Component {
                   return user;
                 });
                 this.setState({
-                  friendList:newFriendList
+                  groups:newgroups
                 });
+              });
+
+              this.props.socket.on('group-offline', (groupId, memberId) =>{
+                console.log('group-offline', groupId);
+                let isUpdate = false;
+
+                let newgroups = this.state.groups.map((group) =>{
+
+                  if(group.id===groupId){
+                    console.log('goffline', groupId);
+                    let isOnline = 0;
+                    let current = false;
+
+                    group.members.forEach(member =>{
+                      
+                      if(member.id===memberId)
+                        if(member.isOnline){
+                          current = true;
+                          member.isOnline = false;
+                        }
+                      else
+                        if(member.isOnline)
+                          isOnline = isOnline + 1;
+                    });
+
+                    if(isOnline===0 && current){
+                      group.isOnline = false;
+                      isUpdate = true;
+                    }
+                  }
+                  
+                  return group;
+                });
+
+                if(isUpdate)
+                  this.setState({
+                    groups:newgroups
+                  });
               });
 
               /*this.props.socket.once('disconnect', (sth) =>{
                   console.log('oncedis', this.props.userId);
-                  this.props.socket.emit('offline', this.props.userId, this.props.friendListIds);
+                  this.props.socket.emit('offline', this.props.userId, this.props.groupsIds);
               });*/
 
               this.props.socket.on('reconnect', (attemptNumber) => {
 
                 console.log('reconnect', this.props.userId, attemptNumber);
                 this.props.socket.emit('identity',
-                  {userId:this.props.userId, friendListIds:this.props.friendListIds}
+                  {userId:this.props.userId, groupsIds:this.props.groupsIds}
                 );
 
                 this.props.refresh();
@@ -311,7 +376,7 @@ class FriendList extends React.Component {
 
       friend.notRead = 0;
       this.setState({
-        friendList: this.state.friendList.slice()
+        groups: this.state.groups.slice()
       });
 
       if(friend.isOnline)
@@ -354,7 +419,7 @@ class FriendList extends React.Component {
 
     this.handleClick = this.handleClick.bind(this);
 
-    const list = this.state.friendList.map((friend) =>{
+    const list = this.state.groups.map((friend) =>{
       return(
         <div key={friend.id} onClick={() => this.handleClick(friend, false)}>
           <h4>
@@ -377,4 +442,4 @@ class FriendList extends React.Component {
   }
 }
 
-export default FriendList;
+export default Groups;

@@ -30,13 +30,16 @@ class Start extends React.Component{
 				}).then(res => res.json())
 					.then(res =>{
 						console.log('refresh user',res);
-						
+
 						if(res)
 							this.setState({
 								user:res
 							});
 						else
-							console.log('refresh user : if it can happen at least one time!');
+							if(res===0)
+								console.log('refresh user error');
+							else
+								console.log('refresh user : if it can happen at least one time!');
 					})
 	                .catch(err =>{
 	                  console.log(err);
@@ -51,7 +54,8 @@ class Start extends React.Component{
 			return (<Login setUser={this.setUser} />)
 		else{
 			return (<App userId={this.state.user.id} userName={this.state.user.userName}
-						 friends={this.state.user.friends} refresh={this.refresh}/>);
+						 friends={this.state.user.friends} refresh={this.refresh}
+						 groups={this.state.user.groups}/>);
 		}
 	}
 }
