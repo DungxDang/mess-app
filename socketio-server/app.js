@@ -15,7 +15,7 @@ io.on('connection', (socket) => {
 		socket.identity = identity;
 	});
 
-	socket.on('identity', (identity) =>{
+	socket.on('groups-identity', (identity) =>{
 		console.log('groups-identity', identity);
 		socket.groupsIdentity = identity;
 	});
@@ -28,9 +28,24 @@ io.on('connection', (socket) => {
 		});
 	});
 
+	socket.on('m-online', (userId, groups) =>{
+		//socket.join(userId+"");
+		//console.log('joinprivroom',userId);
+		groups.forEach((group) =>{
+			group.memberIds.forEach(id =>{
+				socket.to(group+'').emit('I\'m online-g', group.id, userId);
+			});
+		});
+	});
+
 	socket.on('I\'m online too', (userId, friendId) =>{
 		console.log('connectonline', userId, friendId);
 		socket.to(friendId+'').emit('friend online too', userId);
+	});
+
+	socket.on('I\'m online-g too', (groupId, memberId, userId) =>{
+		console.log('gconnectonline', groupId, memberId, userId);
+		socket.to(memberId+'').emit('member online-g too', groupId, userId);
 	});
 
 	socket.on('joinRoom', (roomId, userId) =>{

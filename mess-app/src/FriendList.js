@@ -319,6 +319,9 @@ class FriendList extends React.Component {
 
       if(friend.seen){
         friend.seen = 0;
+
+        let condition = {id:this.props.userId, 'friends.id':friend.id};
+        let update = {'$set':{'friends.$.seen':0}};
         fetch('http://localhost:3001/removeSeen',
           {
                     "method": 'POST',
@@ -326,7 +329,7 @@ class FriendList extends React.Component {
                     "headers": {
                       'Content-Type':'application/json',
                     },
-                    "body": JSON.stringify({friendId:friend.id, userId:this.props.userId})
+                    "body": JSON.stringify({condition:condition, update:update})
           })
         .then(res => res.json())
         .then(res =>{

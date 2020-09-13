@@ -187,9 +187,7 @@ app.post('/removeSeen', (req, res) => {
 	MongoClient.connect(mongodbUrl, {useUnifiedTopology: true}, (err, db) => {
 		if(err) throw err;
 		var dbo = db.db('mess-app');
-		let condition = {id:req.body.userId, 'friends.id':req.body.friendId};
-		let update = {'$set':{'friends.$.seen':0}};
-		dbo.collection('users').updateOne(condition, update)
+		dbo.collection('users').updateOne(req.body.condition, req.body.update)
 			.then((mRes) =>{
 				res.send(mRes);
 				db.close();

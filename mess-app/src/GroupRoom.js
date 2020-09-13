@@ -7,8 +7,8 @@ function NewMess(props){
 
 	function handleSubmit(event) {
 		setText('');
-		if(!props.chatFriend.chatting){
-			let condition = {id:props.chatFriend.id, 'friends.id':props.userId};
+		if(!props.group.chatting){
+			let condition = {id:props.group.id, 'friends.id':props.userId};
 			let update = {'$inc':{'friends.$.notRead':1}};//test
 			fetch('http://localhost:3001/incNotRead',
 			{
@@ -23,15 +23,15 @@ function NewMess(props){
 				.then(res =>{
 					if(res)
 						if(res.nModified)
-							console.log('incnotread-userid:'+props.chatFriend.id);
+							console.log('incnotread-userid:'+props.group.id);
 						else
-							console.log('conditionless-incnotread-userid:'+props.chatFriend.id);
+							console.log('conditionless-incnotread-userid:'+props.group.id);
 					else{
-						console.log('err-incnotread-userid:'+props.chatFriend.id);
+						console.log('err-incnotread-userid:'+props.group.id);
 					}
 				});
-			if(props.chatFriend.isOnline)
-				props.socket.emit('online-notRead', props.userId, props.chatFriend.id);
+			if(props.group.isOnline)
+				props.socket.emit('online-notRead', props.userId, props.group.id);
 		}
 		let newMess = {userName:props.userName, message:text};
 		fetch('http://localhost:3001/saveMessage',
@@ -74,7 +74,7 @@ class Room extends React.Component{
 		super(props);
 		this.state = {
 			messages:this.props.messages,
-			seen:this.props.chatFriend.seen,
+			seen:this.props.group.seen,
 			messageEnd:null
 		}
 	}
@@ -89,24 +89,24 @@ class Room extends React.Component{
 		if(this.props.messages!==prevProps.messages){
 			this.setState({
 				messages:this.props.messages,
-				seen:this.props.chatFriend.seen
+				seen:this.props.group.seen
 			}, this.scrollToBottom);
 
-			this.props.chatFriend.setSeen_chatting = this.setSeen_chatting.bind(this);
+			this.props.group.setSeen_chatting = this.setSeen_chatting.bind(this);
 		}
 
 	}
 
 	setSeen_chatting(id) {
-		if(this.props.chatFriend.id===id)
+		if(this.props.group.id===id)
 			this.setState({seen:1});
 	}
 
 	componentDidMount(){
 
 		this.props.socket.on('message', (_id, userName, mess) =>{
-			if(this.props.chatFriend.seen){
-		        let condition = {id:this.props.userId, 'friends.id':this.props.chatFriend.id};
+			if(this.props.group.seen){
+		        let condition = {id:this.props.userId, 'friends.id':this.props.group.id};
 		        let update = {'$set':{'friends.$.seen':0}};
 				fetch('http://localhost:3001/removeSeen',
 				{
@@ -134,7 +134,7 @@ class Room extends React.Component{
 				  console.log(err);
 				});
 				this.setState({seen:0}, this.scrollToBottom);
-				this.props.chatFriend.seen = 0;
+				this.props.group.seen = 0;
 			}
 
 			let message = {_id:_id, userName:userName, message:mess}
@@ -146,7 +146,7 @@ class Room extends React.Component{
 	}
 	
 	render(){
-		var friendName = this.props.chatFriend.userName;
+		var friendName = this.props.group.userName;
 		var repeat = '';
 		const list = this.state.messages.map((e) =>{
 			if(repeat!==e.userName){
@@ -248,85 +248,14 @@ class Room extends React.Component{
 	}
 }
 
-/*function Room(props){
-
-	const [messages, setMessages] = useState(props.messages);
-	const [seen, setSeen] = useState(props.chatFriend.seen);
-
-	useEffect((privMessages) => {
-		console.log('privMessages',privMessages, props.messages)
-		if(props.messages!==privMessages){
-			setMessages(props.messages);
-		console.log('privMessages',privMessages, props.messages)
-		}
-
-	},[props.messages]);
-		console.log('room', messages);
-
-	function listing() {
-		if(messages)
-			return 	messages.map((e) =>{
-						return(
-							<dl key={e._id}>
-								<dt>{e.userName}</dt> 
-								<dd>{e.message}</dd>
-							</dl>
-						);
-					});
-		else
-			return null;//nonsen
-	}
-
-	function setSeen_chatting(id) {
-		if(props.chatFriend.id===id)
-			setSeen(1);
-	}
-	props.chatFriend.setSeen_chatting = setSeen_chatting;
-	console.log('this',Room.messages);
-
-	useEffect(() => {
-
-			props.socket.on('message', (_id, userName, mess) =>{
-				if(props.chatFriend.seen){
-					fetch('http://localhost:3001/removeSeen',
-					{
-		                "method": 'POST',
-		                //"mode": 'no-cors', 
-		                "headers": {
-		                  'Content-Type':'application/json',
-		                },
-		                "body": JSON.stringify( {friendId:props.chatFriend.id, userId:props.userId})
-		            });
-					setSeen(0);
-					props.chatFriend.seen = 0;
-				}
-				console.log('newmess',mess,userName);
-				let message = {_id:_id, userName:userName, message:mess}
-
-				setMessages([...messages, message]);
-			});
-		
-
-	},[]);
-	
-
-
-	return(
-		<div>
-			<div>{listing()}</div>
-			<div>{seen? 'seen' : ''}</div>
-		</div>
-	);
-}*/
-
-function ChatRoom(props) {
+function GroupRoom(props) {
 
 	return (
 	    <div style={{marginLeft:'8px'}}>
-	    	<div><h3>{props.chatFriend.userName}</h3></div>
+	    	<div><h3>{props.group.userName}</h3></div>
 	    	<Room roomId={props.roomId}
 	    		  socket={props.socket}
-	    		  chatFriend={props.chatFriend}
+	    		  group={props.group}
 	    		  userId={props.userId}
 	    		  messages={props.messages}
 	    	/>
@@ -334,10 +263,10 @@ function ChatRoom(props) {
 	    			 roomId={props.roomId}
 	    			 userName={props.userName}
 	    			 userId={props.userId}
-	    			 chatFriend={props.chatFriend}
+	    			 group={props.group}
 	    	/>
 	    </div>
 	);
 }
 
-export default ChatRoom;
+export default GroupRoom;

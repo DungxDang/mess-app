@@ -4,6 +4,7 @@ import './App.css';
 import ChatRoom from './chat-room';
 import FriendList from './FriendList';
 import Groups from './Groups';
+import GroupRoom from './GroupRoom';
 
 const socket = SocketIoClient('http://127.0.0.1:3002');
 
@@ -28,11 +29,15 @@ class App extends React.Component{
 
 	setRoom(friend, isRefresh){
 		var roomId = '';
-		if(friend.id>this.props.userId){
-			roomId='room'+this.props.userId+''+friend.id;
-		}else{
-			roomId='room'+friend.id+''+this.props.userId;
-		}
+		if(friend.userName)
+			if(friend.id>this.props.userId){
+				roomId='room'+this.props.userId+''+friend.id;
+			}else{
+				roomId='room'+friend.id+''+this.props.userId;
+			}
+		else
+			roomId = 'group'+friend.id;
+
 		if(isRefresh || this.state.roomId !== roomId){
 			if(isRefresh || this.state.roomId){
 				socket.emit('leaveRoom', this.state.roomId, this.props.userId);
@@ -59,6 +64,9 @@ class App extends React.Component{
 						messages : data,
 					});
 
+					if(friend.setupGroup)
+						friend.setupGroup(friend, data[data.length-1]);
+
 					socket.emit('joinRoom', roomId, this.props.userId);
 				});
 		}
@@ -78,15 +86,26 @@ class App extends React.Component{
 
 		var chatRoom = null;
 		if(this.state.chatFriend)
-			chatRoom = (
-			     	<ChatRoom roomId={this.state.roomId}
-			     			  chatFriend={this.state.chatFriend}
-			     			  messages={this.state.messages}
-			     			  userName={this.props.userName}
-			     			  userId={this.props.userId}
-							  socket={socket}
-			     	/>
-				);
+			if(this.state.chatFriend.groupName)
+				chatRoom = (
+				     	<GroupRoom roomId={this.state.roomId}
+				     			  group={this.state.chatFriend}
+				     			  messages={this.state.messages}
+				     			  userName={this.props.userName}
+				     			  userId={this.props.userId}
+								  socket={socket}
+				     	/>
+					);
+			else
+				chatRoom = (
+				     	<ChatRoom roomId={this.state.roomId}
+				     			  chatFriend={this.state.chatFriend}
+				     			  messages={this.state.messages}
+				     			  userName={this.props.userName}
+				     			  userId={this.props.userId}
+								  socket={socket}
+				     	/>
+					);
 
 		return (
 			<div>

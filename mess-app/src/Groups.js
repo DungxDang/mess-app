@@ -46,7 +46,14 @@ class Groups extends React.Component {
             .then(data => data.json())
             .then(groups =>{
 
-              this.props.socket.emit('online', this.props.userId, this.props.groupsIds);//here
+              this.props.socket.emit('m-online', this.props.userId, groups);//here
+
+              this.props.socket.emit('groups-identity',
+                {
+                  userId:this.props.userId,
+                  groups:groups
+                }
+              );
 
               this.props.groups.forEach((group) =>{
                 groups.forEach((g) =>{
@@ -61,13 +68,6 @@ class Groups extends React.Component {
               this.setState({
                 groups:groups
               });
-
-              this.props.socket.emit('groups-identity',
-                {
-                  userId:this.props.userId,
-                  groups:this.props.groups
-                }
-              );
 
               this.loadMembers(groups);
 
@@ -108,7 +108,14 @@ class Groups extends React.Component {
               .then(data => data.json())
               .then(groups =>{
 
-                this.props.socket.emit('online', this.props.userId, this.props.groupsIds);
+                this.props.socket.emit('m-online', this.props.userId, groups);
+
+                this.props.socket.emit('groups-identity',
+                  {
+                    userId:this.props.userId,
+                    groups:groups;
+                  }
+                );
 
                 this.props.groups.forEach((group) =>{
                   groups.forEach((g) =>{
@@ -126,41 +133,58 @@ class Groups extends React.Component {
 
                 this.loadMembers(groups);
 
-                this.props.socket.emit('groups-identity',
-                  {
-                    userId:this.props.userId,
-                    groups:this.props.groups;
-                  }
-                );
-
               })
               .catch(err =>{
                 console.log(err);
               });
 
-              let whoOn = (friendId) =>{
-                console.log('whoOn', friendId);
-                let newgroups = this.state.groups.map((user) =>{
-                  if(user.id===friendId){
-                    user.isOnline = true;
-                    console.log('fonline',friendId);
+              let whoOn = (groupId, memberId) =>{
+
+                console.log('whoOn', groupId, memberId);
+
+                let isUpdate = false;
+                let newgroups = this.state.groups.map((group) =>{
+
+                  if(group.id===groupId){
+                    console.log('gmonline', groupId);
+                    let isOnline = 0;
+
+                    group.members.forEach(member =>{
+                      
+                      if(member.id===memberId)
+                        if(member.isOnline)
+                          member.isOnline = false;
+                        
+                      else
+                        if(member.isOnline)
+                          isOnline = isOnline + 1;
+                    });
+
+                    if(isOnline===0){
+                      group.isOnline = true;
+                      isUpdate = true;
+                    }
                   }
+
                   return user;
                 });
-                this.setState({
-                  groups:newgroups
-                });
+
+                if(isUpdate)
+                  this.setState({
+                    groups:newgroups
+                  });
+
               };
 
-              this.props.socket.on('I\'m online', (friendId)=>{
-                console.log('fonline',friendId);
-                whoOn(friendId);
-                this.props.socket.emit('I\'m online too', this.props.userId, friendId);
+              this.props.socket.on('I\'m online-g', (groupId, memberId)=>{
+                console.log('gmonline',groupId, memberId);
+                whoOn(groupId, memberId);
+                this.props.socket.emit('I\'m online-g too', groupId, memberId, this.props.userId);
               });
 
-              this.props.socket.on('friend online too', (friendId) =>{
-                console.log('fonline too', friendId);
-                whoOn(friendId);
+              this.props.socket.on('member online-g too', (groupId, memberId) =>{
+                console.log('monline too', groupId, memberId);
+                whoOn(groupId, memberId);
               });
 
               this.props.socket.on('joinRoom', (friendId, roomId) =>{
@@ -221,21 +245,6 @@ class Groups extends React.Component {
                 });
               });
 
-              this.props.socket.on('offline', (friendId) =>{
-                console.log('foffline', friendId);
-                let newgroups = this.state.groups.map((user) =>{
-                  if(user.id===friendId){
-                console.log('foffline', friendId);
-                    user.isOnline = false;
-                    user.chatting = false;
-                  }
-                  return user;
-                });
-                this.setState({
-                  groups:newgroups
-                });
-              });
-
               this.props.socket.on('group-offline', (groupId, memberId) =>{
                 console.log('group-offline', groupId);
                 let isUpdate = false;
@@ -273,51 +282,14 @@ class Groups extends React.Component {
                     groups:newgroups
                   });
               });
-
-              /*this.props.socket.once('disconnect', (sth) =>{
-                  console.log('oncedis', this.props.userId);
-                  this.props.socket.emit('offline', this.props.userId, this.props.groupsIds);
-              });*/
-
-              this.props.socket.on('reconnect', (attemptNumber) => {
-
-                console.log('reconnect', this.props.userId, attemptNumber);
-                this.props.socket.emit('identity',
-                  {userId:this.props.userId, groupsIds:this.props.groupsIds}
-                );
-
-                this.props.refresh();
-              });
-
-              this.props.socket.on('reconnecting', (attemptNumber) => {
-                console.log('reconnecting', this.props.userId, attemptNumber);
-              });
-
-              this.props.socket.on('disconnect',(reason) => {
-                if (reason === 'io client disconnect') {
-                  console.log('io client disconnect', this.props.userId);
-                }
-                if (reason === 'io server disconnect') {
-                  console.log('io server disconnect', this.props.userId);
-                }
-                if (reason === 'ping timeout') {
-                  console.log('ping timeout', this.props.userId);
-                }
-
-                if (reason === 'transport close') {
-                  console.log('transport close', this.props.userId);
-                }
-                  console.log('disconnect', this.props.userId, reason);
-              });
   }
             
+  setupGroup(groups, lastMemberMessage){
 
-  handleClick(friend, isRefresh) {
-    console.log('click',friend.userName);
-    if(friend.notRead>0){
+    if(group.notRead>0){
 
-      let condition = {id:friend.id, 'friends.id':this.props.userId};
-      let update = {'$set':{'friends.$.seen':1}};
+      let condition = {id:lastMemberMessage.id, 'groups.id':group.id};
+      let update = {'$push':{'groups.$.seen':lastMemberMessage.userName}};
       fetch('http://localhost:3001/seen',
           {
                     "method": 'POST',
@@ -329,23 +301,24 @@ class Groups extends React.Component {
           })
           .then(res => res.json())
             .then(res =>{
-            console.log('seen',res);
+              console.log('seen',res);
 
               if(res)
                 if(res.nModified)
-                  console.log('seen-userid:'+friend.id);
+                  console.log('gseen-userid:'+group.id);
                 else
-                  console.log('conditionless-seen-userid:'+friend.id);
+                  console.log('conditionless-gseen-userid:'+group.id);
               else{
-                console.log('err-seen-userid:'+friend.id);
+                console.log('err-gseen-userid:'+group.id);
               }
 
             })
-            .catch((err) =>{
-              console.log(err);
-            });
-      condition = {id:this.props.userId, 'friends.id':friend.id};
-      update = {'$set':{'friends.$.notRead':0}};
+              .catch((err) =>{
+                console.log(err);
+              });
+
+      condition = {id:this.props.userId, 'groups.id':group.id};
+      update = {'$set':{'groups.$.notRead':0}};
       fetch('http://localhost:3001/removeNotRead',
           {
                     "method": 'POST',
@@ -357,16 +330,16 @@ class Groups extends React.Component {
           })
           .then(res => res.json())
             .then(res =>{
-            console.log('not',res);
+              console.log('not',res);
 
               
               if(res)
                 if(res.nModified)
-                  console.log('removeNotRead-userid:'+this.props.userId);
+                  console.log('gremoveNotRead-userid:'+this.props.userId);
                 else
-                  console.log('conditionless-removeNotRead-userid:'+this.props.userId);
+                  console.log('conditionless-gremoveNotRead-userid:'+this.props.userId);
               else{
-                console.log('err-removeNotRead-userid:'+this.props.userId);
+                console.log('err-gremoveNotRead-userid:'+this.props.userId);
               }
 
             })
@@ -374,16 +347,19 @@ class Groups extends React.Component {
               console.log(err);
             });
 
-      friend.notRead = 0;
+      group.notRead = 0;
       this.setState({
         groups: this.state.groups.slice()
       });
 
-      if(friend.isOnline)
-        this.props.socket.emit('online-seen', this.props.userId, friend.id);
+      if(group.isOnline)
+        this.props.socket.emit('online-seen', this.props.userId, group.id);
 
-      if(friend.seen){
-        friend.seen = 0;
+      if(group.seen.length){
+        group.seen = [];
+
+        let condition = {id:this.props.userId, 'groups.id':group.id};
+        let update = {'$set':{'groups.$.seen':[]}};
         fetch('http://localhost:3001/removeSeen',
           {
                     "method": 'POST',
@@ -391,18 +367,18 @@ class Groups extends React.Component {
                     "headers": {
                       'Content-Type':'application/json',
                     },
-                    "body": JSON.stringify({friendId:friend.id, userId:this.props.userId})
+                    "body": JSON.stringify({condition:condition, update:update})
           })
         .then(res => res.json())
         .then(res =>{
 
           if(res)
             if(res.nModified)
-              console.log('removeSeen-userid:'+this.props.userId);
+              console.log('gremoveSeen-userid:'+this.props.userId);
             else
-              console.log('conditionless-removeSeen-userid:'+this.props.userId);
+              console.log('conditionless-gremoveSeen-userid:'+this.props.userId);
           else{
-            console.log('err-removeSeen-userid:'+this.props.userId);
+            console.log('err-gremoveSeen-userid:'+this.props.userId);
           }
 
         })
@@ -411,31 +387,39 @@ class Groups extends React.Component {
         });
       }
     }
+  }
 
-    this.props.setRoom(friend, isRefresh);
+  handleClick(group, isRefresh) {
+    console.log('click',group.groupName);
+
+    this.setupGroup = this.setupGroup.bind(this);
+    group.setupGroup = this.setupGroup;
+
+
+    this.props.setRoom(group, isRefresh);
   }
 
   render(){
 
     this.handleClick = this.handleClick.bind(this);
 
-    const list = this.state.groups.map((friend) =>{
+    const list = this.state.groups.map((group) =>{
       return(
-        <div key={friend.id} onClick={() => this.handleClick(friend, false)}>
+        <div key={group.id} onClick={() => this.handleClick(group, false)}>
           <h4>
-            {friend.userName}
+            {group.groupName}
           </h4>
           <h6>
-            {friend.notRead>0? '('+friend.notRead+')' : ''}
+            {group.notRead>0? '('+group.notRead+')' : ''}
           </h6>
-          <h6>{friend.isOnline? 'Online':''}</h6>
+          <h6>{group.isOnline? 'Online':''}</h6>
         </div>
       );
     });
 
     return (
       <div style={{marginLeft:'8px'}}>
-        <div> <h3>Friend List</h3> </div>
+        <div> <h3>Group List</h3> </div>
         <div>{list}</div>
       </div>
     );
