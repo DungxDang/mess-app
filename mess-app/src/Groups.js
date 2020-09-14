@@ -187,35 +187,38 @@ class Groups extends React.Component {
                 whoOn(groupId, memberId);
               });
 
-              this.props.socket.on('joinRoom', (friendId, roomId) =>{
-                console.log('fjoinroom', friendId);
-                this.state.groups.forEach((friend) =>{
-                  if(friend.id===friendId){
+              this.props.socket.on('joinRoom-g', (memberId, groupId) =>{
+                console.log('gfjoinroom', memberId);
+                var group = this.props.isChating(groupId)
+                if(group){
+                  group.members.forEach(mem=>{
+                    if(mem.id===memberId)
+                      mem.chatting = true;
+                  });
 
-                console.log('fjoinedroom', friendId);
-                    friend.chatting = true;
-                    this.props.socket.emit('iJoinedRoomToo', this.props.userId, roomId);
-                  }
-                });
+                  this.props.socket.emit('iJoinedRoomToo-g', this.props.userId, memberId, groupId);
+                }
               });
 
-              this.props.socket.on('iJoinedRoomToo', (friendId) =>{
-                console.log('iJoinedRoomToo', friendId);
-                this.state.groups.forEach((friend) =>{
-                  if(friend.id===friendId){
+              this.props.socket.on('iJoinedRoomToo-g', (groupId, memberId) =>{
+                console.log('iJoinedRoomToog', groupId);
+                var group = this.props.isChating(groupId)
+                if(group){
+                  group.members.forEach(mem=>{
+                    if(mem.id===memberId)
+                      mem.chatting = true;
 
-                console.log('iJoinedRoomToocor', friendId);
-                    friend.chatting = true;
-                  }
-                });
+                    console.log('iJoinedRoomToocor-g', groupId);
+                  });
+                }
               });
 
-              this.props.socket.on('online-notRead', (friendId) =>{
-                let newgroups = this.state.groups.map((user) =>{
-                  if(user.id===friendId){
-                    user.notRead = user.notRead+1;
-                  }
-                  return user;
+              this.props.socket.on('gonline-notRead', (groupId) =>{
+                let newgroups = this.state.groups.map((group) =>{
+                  if(group.id===groupId)
+                    group.notRead = group.notRead+1;
+                  
+                  return group;
                 });
                 this.setState({
                   groups:newgroups
@@ -237,12 +240,14 @@ class Groups extends React.Component {
                 });
               });
 
-              this.props.socket.on('leaveChat', (friendId) =>{
-                this.state.groups.forEach((friend) =>{
-                  if(friend.id===friendId){
-                    friend.chatting = false;
-                  }
-                });
+              this.props.socket.on('leaveChat-g', (groupId, memberId) =>{
+                var group = this.props.isChating(groupId)
+                if(group){
+                  group.members.forEach(mem=>{
+                    if(mem.id===memberId)
+                      mem.chatting = false;
+                  });
+                }
               });
 
               this.props.socket.on('group-offline', (groupId, memberId) =>{
@@ -288,7 +293,7 @@ class Groups extends React.Component {
 
     if(group.notRead>0){
 
-      let condition = {id:lastMemberMessage.id, 'groups.id':group.id};
+      let condition = {id:lastMemberMessage.memberId, 'groups.id':group.id};
       let update = {'$push':{'groups.$.seen':lastMemberMessage.userName}};
       fetch('http://localhost:3001/seen',
           {

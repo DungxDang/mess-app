@@ -7,33 +7,38 @@ function NewMess(props){
 
 	function handleSubmit(event) {
 		setText('');
-		if(!props.group.chatting){
-			let condition = {id:props.group.id, 'friends.id':props.userId};
-			let update = {'$inc':{'friends.$.notRead':1}};//test
-			fetch('http://localhost:3001/incNotRead',
-			{
-                "method": 'POST',
-                //"mode": 'no-cors', 
-                "headers": {
-                  'Content-Type':'application/json',
-                },
-                "body": JSON.stringify({condition:condition, update:update}),
-            })
-			.then(res => res.json())
-				.then(res =>{
-					if(res)
-						if(res.nModified)
-							console.log('incnotread-userid:'+props.group.id);
-						else
-							console.log('conditionless-incnotread-userid:'+props.group.id);
-					else{
-						console.log('err-incnotread-userid:'+props.group.id);
-					}
-				});
-			if(props.group.isOnline)
-				props.socket.emit('online-notRead', props.userId, props.group.id);
-		}
-		let newMess = {userName:props.userName, message:text};
+		props.group.members.forEach(mem =>{
+
+			if(!mem.chatting){
+				let condition = {id:mem.id, 'groups.id':props.group.id};
+				let update = {'$inc':{'groups.$.notRead':1}};//test
+				fetch('http://localhost:3001/incNotRead',
+				{
+	                "method": 'POST',
+	                //"mode": 'no-cors', 
+	                "headers": {
+	                  'Content-Type':'application/json',
+	                },
+	                "body": JSON.stringify({condition:condition, update:update}),
+	            })
+				.then(res => res.json())
+					.then(res =>{
+						if(res)
+							if(res.nModified)
+								console.log('incnotread-groupid:'+props.group.id);
+							else
+								console.log('conditionless-incnotread-groupid:'+props.group.id);
+						else{
+							console.log('err-incnotread-groupid:'+props.group.id);
+						}
+					});
+				if(mem.isOnline)
+					props.socket.emit('gonline-notRead', props.group.id, mem.id);
+			}
+
+		});
+
+		let newMess = {memberId:props.userId, memberName:props.userName, message:text};
 		fetch('http://localhost:3001/saveMessage',
 			{
                 "method": 'POST',
@@ -46,7 +51,7 @@ function NewMess(props){
 			.then(res => res.json())
 				.then(messId =>{
 					if(messId)
-						props.socket.emit('message', text, props.roomId, messId, props.userName);
+						props.socket.emit('gmessage', text, props.roomId, messId, props.userName, props.userId);
 					else{
 						//
 					}
@@ -104,10 +109,10 @@ class Room extends React.Component{
 
 	componentDidMount(){
 
-		this.props.socket.on('message', (_id, userName, mess) =>{
-			if(this.props.group.seen){
-		        let condition = {id:this.props.userId, 'friends.id':this.props.group.id};
-		        let update = {'$set':{'friends.$.seen':0}};
+		this.props.socket.on('message', (_id, memberId, memberName, mess) =>{
+			if(this.props.group.seen.length){
+		        let condition = {id:this.props.userId, 'groups.id':this.props.group.id};
+		        let update = {'$set':{'groups.$.seen':[]}};
 				fetch('http://localhost:3001/removeSeen',
 				{
 	                "method": 'POST',
@@ -122,22 +127,22 @@ class Room extends React.Component{
 
 				  if(res)
 				    if(res.nModified)
-				      console.log('removeSeen-userid:'+this.props.userId);
+				      console.log('gremoveSeen-userid:'+this.props.userId);
 				    else
-				      console.log('conditionless-removeSeen-userid:'+this.props.userId);
+				      console.log('conditionless-gremoveSeen-userid:'+this.props.userId);
 				  else{
-				    console.log('err-removeSeen-userid:'+this.props.userId);
+				    console.log('err-gremoveSeen-userid:'+this.props.userId);
 				  }
 
 				})
 				.catch((err) =>{
 				  console.log(err);
 				});
-				this.setState({seen:0}, this.scrollToBottom);
-				this.props.group.seen = 0;
+				this.setState({seen:[]}, this.scrollToBottom);
+				this.props.group.seen = [];
 			}
 
-			let message = {_id:_id, userName:userName, message:mess}
+			let message = {_id:_id, memberId:memberId, memberName:memberName, message:mess}
 			this.setState({
 				messages:[...this.state.messages, message]
 			}, this.scrollToBottom);
@@ -146,17 +151,17 @@ class Room extends React.Component{
 	}
 	
 	render(){
-		var friendName = this.props.group.userName;
+		var userId = this.props.userId;
 		var repeat = '';
 		const list = this.state.messages.map((e) =>{
-			if(repeat!==e.userName){
-				repeat = e.userName;
-				if(friendName===e.userName){
+			if(repeat!==e.memberName){
+				repeat = e.memberId;
+				if(userId!==e.memberId){
 					let det = 
 						(
 							
 							<div key={e._id}  style={{clear:'both'}}>
-								<dt style={{marginBottom:'2px'}}><b>{e.userName}</b></dt> 
+								<dt style={{marginBottom:'2px'}}><b>{e.memberName}</b></dt> 
 								<dd style={{
 												float:'left',
 												clear:'both',
@@ -177,7 +182,7 @@ class Room extends React.Component{
 							
 							<div key={e._id} style={{clear:'both'}}>
 								<dt style={{marginBottom:'2px',float:'right', clear:'right'}}>
-									<b>{e.userName}</b>
+									<b>{e.memberName}</b>
 								</dt> 
 								<dd style={{
 												float:'right',
@@ -194,7 +199,7 @@ class Room extends React.Component{
 					return det;
 				}
 			}else{
-				if(friendName===e.userName){
+				if(userId!==e.memberId){
 					let det = 
 						(
 							

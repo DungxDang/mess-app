@@ -138,25 +138,23 @@ class FriendList extends React.Component {
 
               this.props.socket.on('joinRoom', (friendId, roomId) =>{
                 console.log('fjoinroom', friendId);
-                this.state.friendList.forEach((friend) =>{
-                  if(friend.id===friendId){
+                let friend = this.props.isChating(friendId);
+                if(friend){
 
-                console.log('fjoinedroom', friendId);
                     friend.chatting = true;
                     this.props.socket.emit('iJoinedRoomToo', this.props.userId, roomId);
-                  }
-                });
+                    console.log('fjoinedroom', friendId);
+
+                }
               });
 
               this.props.socket.on('iJoinedRoomToo', (friendId) =>{
                 console.log('iJoinedRoomToo', friendId);
-                this.state.friendList.forEach((friend) =>{
-                  if(friend.id===friendId){
-
-                console.log('iJoinedRoomToocor', friendId);
+                let friend = this.props.isChating(friendId);
+                if(friend){
+                    console.log('iJoinedRoomToocor', friendId);
                     friend.chatting = true;
-                  }
-                });
+                }
               });
 
               this.props.socket.on('online-notRead', (friendId) =>{
@@ -187,11 +185,10 @@ class FriendList extends React.Component {
               });
 
               this.props.socket.on('leaveChat', (friendId) =>{
-                this.state.friendList.forEach((friend) =>{
-                  if(friend.id===friendId){
-                    friend.chatting = false;
-                  }
-                });
+                let friend = this.props.isChating(friendId);
+                if(friend){
+                  friend.chatting = false;
+                }
               });
 
               this.props.socket.on('offline', (friendId) =>{

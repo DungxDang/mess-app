@@ -59,8 +59,24 @@ io.on('connection', (socket) => {
 		socket.to(roomId).emit('iJoinedRoomToo', userId);
 	});
 
+	socket.on('joinRoom-g', (roomId, groupId, userId) =>{
+		console.log('joinroom-g',roomId, userId);
+		socket.join(roomId);
+		socket.to(roomId).emit('joinRoom-g', userId, groupId);
+	});
+
+	socket.on('iJoinedRoomToo-g', (userId, memberId, groupId) =>{
+		console.log('iJoinedRoomToo-g',groupId, userId);
+		socket.to(memberId+"").emit('iJoinedRoomToo-g', groupId, userId);
+	});
+
 	socket.on('leaveRoom',(roomId, userId) => {
 		socket.to(roomId).emit('leaveChat', userId);
+		socket.leave(roomId);
+	});
+
+	socket.on('leaveRoom-g',(roomId, groupId, userId) => {
+		socket.to(roomId).emit('leaveChat-g', groupId, userId);
 		socket.leave(roomId);
 	});
 
@@ -69,9 +85,19 @@ io.on('connection', (socket) => {
 		io.to(roomId).emit('message', messId, userName, mess);
 	});
 
+	socket.on('gmessage', (mess, roomId, messId, memberName, memberId) => {
+		console.log(mess,roomId, messId, memberName);
+		io.to(roomId).emit('gmessage', messId, memberId, memberName, mess);
+	});
+
+
 
 	socket.on('online-notRead', (userId, friendId) => {
 		socket.to(friendId+'').emit('online-notRead', userId);
+	});
+
+	socket.on('gonline-notRead', (groupId, userId, memberId) => {
+		socket.to(memberId+'').emit('gonline-notRead', groupId);
 	});
 
 	socket.on('online-seen', (userId, friendId) => {
