@@ -53,7 +53,7 @@ class Start extends React.Component{
 		if(!this.state.user)
 			return (<Login setUser={this.setUser} />)
 		else{
-			return (<App userId={this.state.user.id} userName={this.state.user.userName}
+			return (<App userId={this.state.user._id} userName={this.state.user.userName}
 						 friends={this.state.user.friends} refresh={this.refresh}
 						 groups={this.state.user.groups}/>);
 		}

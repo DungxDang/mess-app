@@ -10,7 +10,7 @@ function NewMess(props){
 		props.group.members.forEach(mem =>{
 
 			if(!mem.chatting){
-				let condition = {id:mem.id, 'groups.id':props.group.id};
+				let condition = {_id:mem._id, 'groups._id':props.group._id};
 				let update = {'$inc':{'groups.$.notRead':1}};//test
 				fetch('http://localhost:3001/incNotRead',
 				{
@@ -25,15 +25,15 @@ function NewMess(props){
 					.then(res =>{
 						if(res)
 							if(res.nModified)
-								console.log('incnotread-groupid:'+props.group.id);
+								console.log('incnotread-groupid:'+props.group._id);
 							else
-								console.log('conditionless-incnotread-groupid:'+props.group.id);
+								console.log('conditionless-incnotread-groupid:'+props.group._id);
 						else{
-							console.log('err-incnotread-groupid:'+props.group.id);
+							console.log('err-incnotread-groupid:'+props.group._id);
 						}
 					});
 				if(mem.isOnline)
-					props.socket.emit('gonline-notRead', props.group.id, mem.id);
+					props.socket.emit('gonline-notRead', props.group._id, mem._id);
 			}
 
 		});
@@ -78,10 +78,12 @@ class Room extends React.Component{
 	constructor(props){
 		super(props);
 		this.state = {
-			messages:this.props.messages,
-			seen:this.props.group.seen,
-			messageEnd:null
+			messages:[],
+			seen:[],
+			messageEnd:null,
 		}
+		this.missMess = [];
+		this.on = 1;
 	}
 
 	scrollToBottom(){
@@ -93,25 +95,56 @@ class Room extends React.Component{
 	componentDidUpdate(prevProps){
 		if(this.props.messages!==prevProps.messages){
 			this.setState({
-				messages:this.props.messages,
+				messages:this.addMess(this.props.messages),
 				seen:this.props.group.seen
 			}, this.scrollToBottom);
 
 			this.props.group.setSeen_chatting = this.setSeen_chatting.bind(this);
+			this.props.group.missingOn = this.missingOn.bind(this);
 		}
 
 	}
 
-	setSeen_chatting(id) {
-		if(this.props.group.id===id)
-			this.setState({seen:1});
+	setSeen_chatting(group) {
+		if(this.props.group._id===group._id)
+			this.setState({seen:group.seen});
+	}
+
+	missingOn() {
+		this.on = 1;
+	}
+
+	addMess(messages){
+
+		let mess100 = messages;
+		if(messages.length>20)
+			mess100 = messages.slice(messages.length-20, messages.length);
+		this.missMess.forEach(message =>{
+			let repeat = false;
+			for(let i=mess100.length; i>=0; i--){
+				if(mess100[i]._id===messages._id){
+					repeat = true;
+					break;
+				}
+			}
+			if(!repeat)
+				messages.push(message);
+		});
+		this.on = 0;
+		return messages;
 	}
 
 	componentDidMount(){
+		this.setState({
+			messages:this.addMess(this.props.messages),
+			seen:this.props.group.seen,
+		}, this.scrollToBottom);
+		this.props.group.setSeen_chatting = this.setSeen_chatting.bind(this);
+		this.props.group.missingOn = this.missingOn.bind(this);
 
 		this.props.socket.on('message', (_id, memberId, memberName, mess) =>{
 			if(this.props.group.seen.length){
-		        let condition = {id:this.props.userId, 'groups.id':this.props.group.id};
+		        let condition = {_id:this.props.userId, 'groups._id':this.props.group._id};
 		        let update = {'$set':{'groups.$.seen':[]}};
 				fetch('http://localhost:3001/removeSeen',
 				{
@@ -143,9 +176,12 @@ class Room extends React.Component{
 			}
 
 			let message = {_id:_id, memberId:memberId, memberName:memberName, message:mess}
-			this.setState({
-				messages:[...this.state.messages, message]
-			}, this.scrollToBottom);
+			if(this.on)
+				this.missMess.push(message);
+			else
+				this.setState({
+					messages:[...this.state.messages, message]
+				}, this.scrollToBottom);
 		});
 
 	}
@@ -239,7 +275,16 @@ class Room extends React.Component{
 
 			}
 		});
-
+		let seen = '';
+		if(this.state.seen.length){
+			this.state.seen.forEach(memberName =>{
+				seen = memberName + ', ';
+			});
+			if(this.state.seen.length>1)
+				seen = seen.slice(0,seen.length-2) + ' have seen';
+			else
+				seen = seen.slice(0,seen.length-2) + ' has seen';
+		}
 
 		return(
 			<div>
@@ -247,7 +292,7 @@ class Room extends React.Component{
 						ref={(el) =>{this.state.messageEnd=el}}>
 					{list}
 				</div>
-				<div>{this.state.seen? 'seen' : ''}</div>
+				<div>{seen}</div>
 			</div>
 		);
 	}
@@ -257,7 +302,7 @@ function GroupRoom(props) {
 
 	return (
 	    <div style={{marginLeft:'8px'}}>
-	    	<div><h3>{props.group.userName}</h3></div>
+	    	<div><h3>{props.group.groupName}</h3></div>
 	    	<Room roomId={props.roomId}
 	    		  socket={props.socket}
 	    		  group={props.group}

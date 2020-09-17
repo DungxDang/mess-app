@@ -15,6 +15,7 @@ class App extends React.Component{
 			roomID:null,
 			chatFriend:null,
 			messages:[],
+
 		};
 
 	}
@@ -30,19 +31,19 @@ class App extends React.Component{
 	setRoom(friend, isRefresh){
 		var roomId = '';
 		if(friend.userName)
-			if(friend.id>this.props.userId){
-				roomId='room'+this.props.userId+''+friend.id;
+			if(friend._id>this.props.userId){
+				roomId='room'+this.props.userId+''+friend._id;
 			}else{
-				roomId='room'+friend.id+''+this.props.userId;
+				roomId='room'+friend._id+''+this.props.userId;
 			}
 		else
-			roomId = 'group'+friend.id;
+			roomId = 'group'+friend._id;
 
 		if(isRefresh || this.state.roomId !== roomId){
 			if(this.state.roomId){
 				if(!isRefresh)
 					if(friend.groupName)
-						socket.emit('leaveRoom-g', this.state.roomId, this.state.chatFriend.id, this.props.userId);
+						socket.emit('leaveRoom-g', this.state.roomId, this.state.chatFriend._id, this.props.userId);
 					else
 						socket.emit('leaveRoom', this.state.roomId, this.props.userId);
 				
@@ -56,6 +57,14 @@ class App extends React.Component{
 
 			if(this.state.chatFriend)
 				this.state.chatFriend.setSeen_chatting = null;
+
+
+			if(friend.groupName){
+				socket.emit('joinRoom-g', roomId, friend._id, this.props.userId);
+				if(this.state.chatFriend && this.state.chatFriend.groupName)
+					this.state.chatFriend.missingOn();
+
+			}
 
 			fetch('http://localhost:3001/messages',
 			{
@@ -80,8 +89,6 @@ class App extends React.Component{
 
 					if(friend.userName)
 						socket.emit('joinRoom', roomId, this.props.userId);
-					else
-						socket.emit('joinRoom-g', roomId, friend.id, this.props.userId);
 				});
 		}
 	}
@@ -92,7 +99,7 @@ class App extends React.Component{
 
 	isChating(id){
 		if(this.state.chatFriend)
-			if(this.state.chatFriend.id===id)
+			if(this.state.chatFriend._id===id)
 				return this.state.chatFriend;
 			else
 				return false;
@@ -106,8 +113,8 @@ class App extends React.Component{
 		this.setStateApp = this.setStateApp.bind(this);
 		this.isChating = this.isChating.bind(this);
 
-  		var friendListIds = this.props.friends.map((friend) => friend.id);
-  		var groupIds = this.props.groups.map((group) => group.id);
+  		var friendListIds = this.props.friends.map((friend) => friend._id);
+  		var groupIds = this.props.groups.map((group) => group._id);
 
 		var chatRoom = null;
 		if(this.state.chatFriend)
@@ -157,6 +164,7 @@ class App extends React.Component{
 
 				    	<Groups 	setRoom={this.setRoom}
 									userId={this.props.userId}
+									userName={this.props.userName}
 									groups={this.props.groups}
 									groupIds={groupIds}
 									getChatFriend={this.getChatFriend}

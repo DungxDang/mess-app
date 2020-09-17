@@ -27,7 +27,7 @@ class FriendList extends React.Component {
 
               this.props.friends.forEach((friend) =>{
                 users.forEach((user) =>{
-                  if(user.id===friend.id){
+                  if(user._id===friend._id){
                     user.notRead = friend.notRead;
                     user.seen = friend.seen;
                   }
@@ -50,7 +50,7 @@ class FriendList extends React.Component {
               if(currentChatFriend){
                 var exist = false;
                 users.forEach((friend) =>{
-                  if(friend.id===currentChatFriend.id){
+                  if(friend._id===currentChatFriend._id){
                     exist = true;
                     console.log('refresh-didupdate');
                     this.handleClick(friend, true);
@@ -87,7 +87,7 @@ class FriendList extends React.Component {
                 
                 this.props.friends.forEach((friend) =>{
                   users.forEach((user) =>{
-                    if(user.id===friend.id){
+                    if(user._id===friend._id){
                       user.notRead = friend.notRead;
                       user.seen = friend.seen;
                     }
@@ -114,7 +114,7 @@ class FriendList extends React.Component {
               let whoOn = (friendId) =>{
                 console.log('whoOn', friendId);
                 let newFriendList = this.state.friendList.map((user) =>{
-                  if(user.id===friendId){
+                  if(user._id===friendId){
                     user.isOnline = true;
                     console.log('fonline',friendId);
                   }
@@ -159,7 +159,7 @@ class FriendList extends React.Component {
 
               this.props.socket.on('online-notRead', (friendId) =>{
                 let newFriendList = this.state.friendList.map((user) =>{
-                  if(user.id===friendId){
+                  if(user._id===friendId){
                     user.notRead = user.notRead+1;
                   }
                   return user;
@@ -173,7 +173,7 @@ class FriendList extends React.Component {
               this.props.socket.on('online-seen', (friendId) =>{
                       console.log('online-seen1', friendId);
                 this.state.friendList.forEach((friend) =>{
-                  if(friend.id===friendId){
+                  if(friend._id===friendId){
                     friend.seen = 1;
                       console.log('online-seen2',friend);
                     if(friend.setSeen_chatting){
@@ -194,7 +194,7 @@ class FriendList extends React.Component {
               this.props.socket.on('offline', (friendId) =>{
                 console.log('foffline', friendId);
                 let newFriendList = this.state.friendList.map((user) =>{
-                  if(user.id===friendId){
+                  if(user._id===friendId){
                 console.log('foffline', friendId);
                     user.isOnline = false;
                     user.chatting = false;
@@ -248,7 +248,7 @@ class FriendList extends React.Component {
     console.log('click',friend.userName);
     if(friend.notRead>0){
 
-      let condition = {id:friend.id, 'friends.id':this.props.userId};
+      let condition = {_id:friend._id, 'friends._id':this.props.userId};
       let update = {'$set':{'friends.$.seen':1}};
       fetch('http://localhost:3001/seen',
           {
@@ -265,18 +265,18 @@ class FriendList extends React.Component {
 
               if(res)
                 if(res.nModified)
-                  console.log('seen-userid:'+friend.id);
+                  console.log('seen-userid:'+friend._id);
                 else
-                  console.log('conditionless-seen-userid:'+friend.id);
+                  console.log('conditionless-seen-userid:'+friend._id);
               else{
-                console.log('err-seen-userid:'+friend.id);
+                console.log('err-seen-userid:'+friend._id);
               }
 
             })
             .catch((err) =>{
               console.log(err);
             });
-      condition = {id:this.props.userId, 'friends.id':friend.id};
+      condition = {_id:this.props.userId, 'friends._id':friend._id};
       update = {'$set':{'friends.$.notRead':0}};
       fetch('http://localhost:3001/removeNotRead',
           {
@@ -312,12 +312,12 @@ class FriendList extends React.Component {
       });
 
       if(friend.isOnline)
-        this.props.socket.emit('online-seen', this.props.userId, friend.id);
+        this.props.socket.emit('online-seen', this.props.userId, friend._id);
 
       if(friend.seen){
         friend.seen = 0;
 
-        let condition = {id:this.props.userId, 'friends.id':friend.id};
+        let condition = {_id:this.props.userId, 'friends._id':friend._id};
         let update = {'$set':{'friends.$.seen':0}};
         fetch('http://localhost:3001/removeSeen',
           {
@@ -356,7 +356,7 @@ class FriendList extends React.Component {
 
     const list = this.state.friendList.map((friend) =>{
       return(
-        <div key={friend.id} onClick={() => this.handleClick(friend, false)}>
+        <div key={friend._id} onClick={() => this.handleClick(friend, false)}>
           <h4>
             {friend.userName}
           </h4>

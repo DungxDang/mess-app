@@ -57,7 +57,7 @@ class Groups extends React.Component {
 
               this.props.groups.forEach((group) =>{
                 groups.forEach((g) =>{
-                  if(g.id===group.id){
+                  if(g._id===group._id){
                     g.notRead = group.notRead;
                     g.seen = group.seen;
                   }
@@ -75,7 +75,7 @@ class Groups extends React.Component {
               if(currentChatFriend){
                 var exist = false;
                 groups.forEach((group) =>{
-                  if(group.id===currentChatFriend.id){
+                  if(group._id===currentChatFriend._id){
                     exist = true;
                     console.log('groups-refresh-didupdate');
                     this.handleClick(group, true);
@@ -103,7 +103,7 @@ class Groups extends React.Component {
                 "headers": {
                   'Content-Type':'application/json',
                 },
-                "body": JSON.stringify({groupsIds:this.props.groupsIds}),
+                "body": JSON.stringify({groupIds:this.props.groupIds}),
               })
               .then(data => data.json())
               .then(groups =>{
@@ -113,20 +113,20 @@ class Groups extends React.Component {
                 this.props.socket.emit('groups-identity',
                   {
                     userId:this.props.userId,
-                    groups:groups;
+                    groups:groups
                   }
                 );
 
                 this.props.groups.forEach((group) =>{
                   groups.forEach((g) =>{
-                    if(g.id===group.id){
+                    if(g._id===group._id){
                       g.notRead = group.notRead;
                       g.seen = group.seen;
                     }
                   });
                 });
 
-                console.log(groups);
+                console.log('gorup',groups);
                 this.setState({
                   groups:groups
                 });
@@ -145,15 +145,15 @@ class Groups extends React.Component {
                 let isUpdate = false;
                 let newgroups = this.state.groups.map((group) =>{
 
-                  if(group.id===groupId){
+                  if(group._id===groupId){
                     console.log('gmonline', groupId);
                     let isOnline = 0;
 
                     group.members.forEach(member =>{
                       
-                      if(member.id===memberId)
+                      if(member._id===memberId)
                         if(member.isOnline)
-                          member.isOnline = false;
+                          member.isOnline = true;
                         
                       else
                         if(member.isOnline)
@@ -166,7 +166,7 @@ class Groups extends React.Component {
                     }
                   }
 
-                  return user;
+                  return group;
                 });
 
                 if(isUpdate)
@@ -192,7 +192,7 @@ class Groups extends React.Component {
                 var group = this.props.isChating(groupId)
                 if(group){
                   group.members.forEach(mem=>{
-                    if(mem.id===memberId)
+                    if(mem._id===memberId)
                       mem.chatting = true;
                   });
 
@@ -205,7 +205,7 @@ class Groups extends React.Component {
                 var group = this.props.isChating(groupId)
                 if(group){
                   group.members.forEach(mem=>{
-                    if(mem.id===memberId)
+                    if(mem._id===memberId)
                       mem.chatting = true;
 
                     console.log('iJoinedRoomToocor-g', groupId);
@@ -215,7 +215,7 @@ class Groups extends React.Component {
 
               this.props.socket.on('gonline-notRead', (groupId) =>{
                 let newgroups = this.state.groups.map((group) =>{
-                  if(group.id===groupId)
+                  if(group._id===groupId)
                     group.notRead = group.notRead+1;
                   
                   return group;
@@ -226,15 +226,15 @@ class Groups extends React.Component {
 
               });
 
-              this.props.socket.on('online-seen', (friendId) =>{
-                      console.log('online-seen1', friendId);
-                this.state.groups.forEach((friend) =>{
-                  if(friend.id===friendId){
-                    friend.seen = 1;
-                      console.log('online-seen2',friend);
-                    if(friend.setSeen_chatting){
-                      console.log('online-seen3',friendId);
-                      friend.setSeen_chatting(friendId);
+              this.props.socket.on('online-seen-g', (groupId, memberName) =>{
+                      console.log('online-seen1-g', groupId, memberName);
+                this.state.groups.forEach((group) =>{
+                  if(group._id===groupId){
+                    group.seen.push(memberName);
+                      console.log('online-seen2-g',groupId, memberName);
+                    if(group.setSeen_chatting){
+                      console.log('online-seen3-g',groupId, memberName);
+                      group.setSeen_chatting(group);
                     }
                   }
                 });
@@ -244,7 +244,7 @@ class Groups extends React.Component {
                 var group = this.props.isChating(groupId)
                 if(group){
                   group.members.forEach(mem=>{
-                    if(mem.id===memberId)
+                    if(mem._id===memberId)
                       mem.chatting = false;
                   });
                 }
@@ -256,14 +256,14 @@ class Groups extends React.Component {
 
                 let newgroups = this.state.groups.map((group) =>{
 
-                  if(group.id===groupId){
+                  if(group._id===groupId){
                     console.log('goffline', groupId);
                     let isOnline = 0;
                     let current = false;
 
                     group.members.forEach(member =>{
                       
-                      if(member.id===memberId)
+                      if(member._id===memberId)
                         if(member.isOnline){
                           current = true;
                           member.isOnline = false;
@@ -289,11 +289,11 @@ class Groups extends React.Component {
               });
   }
             
-  setupGroup(groups, lastMemberMessage){
+  setupGroup(group, lastMemberMessage){
 
     if(group.notRead>0){
 
-      let condition = {id:lastMemberMessage.memberId, 'groups.id':group.id};
+      let condition = {_id:lastMemberMessage.memberId, 'groups._id':group._id};
       let update = {'$push':{'groups.$.seen':lastMemberMessage.userName}};
       fetch('http://localhost:3001/seen',
           {
@@ -310,11 +310,11 @@ class Groups extends React.Component {
 
               if(res)
                 if(res.nModified)
-                  console.log('gseen-userid:'+group.id);
+                  console.log('gseen-userid:'+group._id);
                 else
-                  console.log('conditionless-gseen-userid:'+group.id);
+                  console.log('conditionless-gseen-userid:'+group._id);
               else{
-                console.log('err-gseen-userid:'+group.id);
+                console.log('err-gseen-userid:'+group._id);
               }
 
             })
@@ -322,7 +322,7 @@ class Groups extends React.Component {
                 console.log(err);
               });
 
-      condition = {id:this.props.userId, 'groups.id':group.id};
+      condition = {_id:this.props.userId, 'groups._id':group._id};
       update = {'$set':{'groups.$.notRead':0}};
       fetch('http://localhost:3001/removeNotRead',
           {
@@ -358,12 +358,15 @@ class Groups extends React.Component {
       });
 
       if(group.isOnline)
-        this.props.socket.emit('online-seen', this.props.userId, group.id);
+        group.members.forEach(mem =>{
+          if(mem.isOnline)
+            this.props.socket.emit('online-seen-g', this.props.userName, group._id, mem._id);
+        });
 
       if(group.seen.length){
         group.seen = [];
 
-        let condition = {id:this.props.userId, 'groups.id':group.id};
+        let condition = {_id:this.props.userId, 'groups._id':group._id};
         let update = {'$set':{'groups.$.seen':[]}};
         fetch('http://localhost:3001/removeSeen',
           {
@@ -388,7 +391,7 @@ class Groups extends React.Component {
 
         })
         .catch((err) =>{
-          console.log(err);
+          console.log(err);//._id
         });
       }
     }
@@ -410,7 +413,7 @@ class Groups extends React.Component {
 
     const list = this.state.groups.map((group) =>{
       return(
-        <div key={group.id} onClick={() => this.handleClick(group, false)}>
+        <div key={group._id} onClick={() => this.handleClick(group, false)}>
           <h4>
             {group.groupName}
           </h4>

@@ -8,7 +8,7 @@ function NewMess(props){
 	function handleSubmit(event) {
 		setText('');
 		if(!props.chatFriend.chatting){
-			let condition = {id:props.chatFriend.id, 'friends.id':props.userId};
+			let condition = {_id:props.chatFriend._id, 'friends._id':props.userId};
 			let update = {'$inc':{'friends.$.notRead':1}};//test
 			fetch('http://localhost:3001/incNotRead',
 			{
@@ -23,15 +23,15 @@ function NewMess(props){
 				.then(res =>{
 					if(res)
 						if(res.nModified)
-							console.log('incnotread-userid:'+props.chatFriend.id);
+							console.log('incnotread-userid:'+props.chatFriend._id);
 						else
-							console.log('conditionless-incnotread-userid:'+props.chatFriend.id);
+							console.log('conditionless-incnotread-userid:'+props.chatFriend._id);
 					else{
-						console.log('err-incnotread-userid:'+props.chatFriend.id);
+						console.log('err-incnotread-userid:'+props.chatFriend._id);
 					}
 				});
 			if(props.chatFriend.isOnline)
-				props.socket.emit('online-notRead', props.userId, props.chatFriend.id);
+				props.socket.emit('online-notRead', props.userId, props.chatFriend._id);
 		}
 		let newMess = {userName:props.userName, message:text};
 		fetch('http://localhost:3001/saveMessage',
@@ -77,6 +77,7 @@ class Room extends React.Component{
 			seen:this.props.chatFriend.seen,
 			messageEnd:null
 		}
+		this.props.chatFriend.setSeen_chatting = this.setSeen_chatting.bind(this);
 	}
 
 	scrollToBottom(){
@@ -98,15 +99,15 @@ class Room extends React.Component{
 	}
 
 	setSeen_chatting(id) {
-		if(this.props.chatFriend.id===id)
-			this.setState({seen:1});
+		if(this.props.chatFriend._id===id)
+			this.setState({seen:1});//._id
 	}
 
 	componentDidMount(){
 
 		this.props.socket.on('message', (_id, userName, mess) =>{
 			if(this.props.chatFriend.seen){
-		        let condition = {id:this.props.userId, 'friends.id':this.props.chatFriend.id};
+		        let condition = {_id:this.props.userId, 'friends._id':this.props.chatFriend._id};
 		        let update = {'$set':{'friends.$.seen':0}};
 				fetch('http://localhost:3001/removeSeen',
 				{
@@ -142,6 +143,7 @@ class Room extends React.Component{
 				messages:[...this.state.messages, message]
 			}, this.scrollToBottom);
 		});
+		this.scrollToBottom();
 
 	}
 	
@@ -156,7 +158,7 @@ class Room extends React.Component{
 						(
 							
 							<div key={e._id}  style={{clear:'both'}}>
-								<dt style={{marginBottom:'2px'}}><b>{e.userName}</b></dt> 
+								<dt style={{margin:'5px 0px 2px'}}><b>{e.userName}</b></dt> 
 								<dd style={{
 												float:'left',
 												clear:'both',
@@ -176,7 +178,7 @@ class Room extends React.Component{
 						(
 							
 							<div key={e._id} style={{clear:'both'}}>
-								<dt style={{marginBottom:'2px',float:'right', clear:'right'}}>
+								<dt style={{margin:'5px 0px 2px',float:'right', clear:'right'}}>
 									<b>{e.userName}</b>
 								</dt> 
 								<dd style={{
@@ -278,7 +280,7 @@ class Room extends React.Component{
 	}
 
 	function setSeen_chatting(id) {
-		if(props.chatFriend.id===id)
+		if(props.chatFriend._id===id)
 			setSeen(1);
 	}
 	props.chatFriend.setSeen_chatting = setSeen_chatting;
@@ -295,7 +297,7 @@ class Room extends React.Component{
 		                "headers": {
 		                  'Content-Type':'application/json',
 		                },
-		                "body": JSON.stringify( {friendId:props.chatFriend.id, userId:props.userId})
+		                "body": JSON.stringify( {friendId:props.chatFriend._id, userId:props.userId})
 		            });
 					setSeen(0);
 					props.chatFriend.seen = 0;

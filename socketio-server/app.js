@@ -104,12 +104,10 @@ io.on('connection', (socket) => {
 		socket.to(friendId+"").emit('online-seen', userId);
 	});
 
-/*	socket.on('offline', (userId, friendListIds) =>{
-                console.log('offline', userId);
-		friendListIds.forEach((friendId) =>{
-			socket.to(friendId+'').emit('offline', userId);
-		});
-	});*/
+	socket.on('online-seen-g', (userName, groupId, memberId ) => {
+		socket.to(memberId+"").emit('online-seen-g', groupId, userName);
+	});
+
 
 	socket.on('disconnecting', (reason) =>{
 		if(reason){}///
@@ -127,7 +125,7 @@ io.on('connection', (socket) => {
             console.log('group-offline', socket.identity.groups);
 			socket.groupsIdentity.groups.forEach((group) =>{
 				group.memberIds.forEach(memberId =>{
-					socket.to(memberId+'').emit('group-offline', group.id, socket.identity.userId);
+					socket.to(memberId+'').emit('group-offline', group._id, socket.identity.userId);
 				});
 			});
 		}else{

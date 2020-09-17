@@ -22,7 +22,7 @@ app.post('/login', jsonParser, function(req, res){
 		else{
 
 			db.db('mess-app').collection('users')
-				.findOne({userName:req.body.userName},{_id:0})
+				.findOne({userName:req.body.userName})
 				.then((data) => {
 					console.log(data);
 					res.json(data);
@@ -44,7 +44,7 @@ app.post('/friendList', function(req, res){
 		if(err) console.log(err);
 		else{
 			var dbo = db.db('mess-app');
-			dbo.collection('users').find({id : {$in:req.body.friendListIds}}, {_id:0, friends:0})
+			dbo.collection('users').find({_id : {$in:req.body.friendListIds}}, { friends:0})
 				.toArray((err, data) => {
 					if(err)
 						console.log(err);
@@ -62,7 +62,7 @@ app.post('/groups', function(req, res){
 		if(err) console.log(err);
 		else{
 			var dbo = db.db('mess-app');
-			dbo.collection('users').find({id : {$in:req.body.groupIds}})
+			dbo.collection('groups').find({_id : {$in:req.body.groupIds}})
 				.toArray((err, data) => {
 					if(err)
 						console.log(err);
@@ -80,7 +80,7 @@ app.post('/members', function(req, res){
 		if(err) console.log(err);
 		else{
 			var dbo = db.db('mess-app');
-			dbo.collection('users').find({id : {$in:req.body.memberIds}}, {_id:0, friends:0})
+			dbo.collection('users').find({_id : {$in:req.body.memberIds}}, { friends:0})
 				.toArray((err, data) => {
 					if(err)
 						console.log(err);
@@ -205,48 +205,48 @@ app.post('/removeSeen', (req, res) => {
 	console.log('Listening on 3001');
 });
 /*db.users.insertMany([
-{ _id:1, userName:'user1', password:'1234', friends: [ {id:2,notRead:0,seen:0}, {id:3,notRead:0,seen:0},
- {id:4,notRead:0,seen:0}, {id:5,notRead:0,seen:0}, {id:6,notRead:0,seen:0} ], 
-	groups:[{id:1, notRead:0, seen:[]}, {groups:[id:2, notRead:0, seen:[]}]
+{ _id:1, userName:'user1', password:'1234', friends: [ {_id:2,notRead:0,seen:0}, {_id:3,notRead:0,seen:0},
+ {_id:4,notRead:0,seen:0}, {_id:5,notRead:0,seen:0}, {_id:6,notRead:0,seen:0} ], 
+	groups:[{_id:1, notRead:0, seen:[]}, {_id:2, notRead:0, seen:[]}]
  },
-{ _id:2, userName:'user2', password:'1234', friends: [ {id:1,notRead:0,seen:0}, {id:3,notRead:0,seen:0}, 
-{id:4,notRead:0,seen:0}, {id:5,notRead:0,seen:0}, {id:6,notRead:0,seen:0} ], 
-	groups:[{id:1, notRead:0, seen:[]}, {groups:[id:2, notRead:0, seen:[]}]
+{ _id:2, userName:'user2', password:'1234', friends: [ {_id:1,notRead:0,seen:0}, {_id:3,notRead:0,seen:0}, 
+{_id:4,notRead:0,seen:0}, {_id:5,notRead:0,seen:0}, {_id:6,notRead:0,seen:0} ], 
+	groups:[{_id:1, notRead:0, seen:[]}, {_id:2, notRead:0, seen:[]}]
 },
-{ _id:3, userName:'user3', password:'1234', friends: [ {id:2,notRead:0,seen:0}, {id:1,notRead:0,seen:0}, 
-{id:4,notRead:0,seen:0}, {id:5,notRead:0,seen:0}, {id:6,notRead:0,seen:0} ], 
-	groups:[{id:1, notRead:0, seen:[]}, {groups:[id:2, notRead:0, seen:[]}]
+{ _id:3, userName:'user3', password:'1234', friends: [ {_id:2,notRead:0,seen:0}, {_id:1,notRead:0,seen:0}, 
+{_id:4,notRead:0,seen:0}, {_id:5,notRead:0,seen:0}, {_id:6,notRead:0,seen:0} ], 
+	groups:[{_id:1, notRead:0, seen:[]}, {_id:2, notRead:0, seen:[]}]
 },
-{ _id:4, userName:'user4', password:'1234', friends: [ {id:2,notRead:0,seen:0}, {id:3,notRead:0,seen:0}, 
-{id:1,notRead:0,seen:0}, {id:5,notRead:0,seen:0}, {id:6,notRead:0,seen:0} ], 
-	groups:[{id:1, notRead:0, seen:[]}, {groups:[id:2, notRead:0, seen:[]}]
+{ _id:4, userName:'user4', password:'1234', friends: [ {_id:2,notRead:0,seen:0}, {_id:3,notRead:0,seen:0}, 
+{_id:1,notRead:0,seen:0}, {_id:5,notRead:0,seen:0}, {_id:6,notRead:0,seen:0} ], 
+	groups:[{_id:1, notRead:0, seen:[]}, {_id:2, notRead:0, seen:[]}]
 },
-{ _id:5, userName:'user5', password:'1234', friends: [ {id:2,notRead:0,seen:0}, {id:3,notRead:0,seen:0}, 
-{id:4,notRead:0,seen:0}, {id:1,notRead:0,seen:0}, {id:6,notRead:0,seen:0} ], 
-	groups:[{id:1, notRead:0, seen:[]},]
+{ _id:5, userName:'user5', password:'1234', friends: [ {_id:2,notRead:0,seen:0}, {_id:3,notRead:0,seen:0}, 
+{_id:4,notRead:0,seen:0}, {_id:1,notRead:0,seen:0}, {_id:6,notRead:0,seen:0} ], 
+	groups:[{_id:1, notRead:0, seen:[]},]
 },
-{ _id:6, userName:'user6', password:'1234', friends: [ {id:2,notRead:0,seen:0}, {id:3,notRead:0,seen:0}, 
-{id:4,notRead:0,seen:0}, {id:5,notRead:0,seen:0}, {id:1,notRead:0,seen:0} ], 
-	groups:[{id:1, notRead:0, seen:[]},]
+{ _id:6, userName:'user6', password:'1234', friends: [ {_id:2,notRead:0,seen:0}, {_id:3,notRead:0,seen:0}, 
+{_id:4,notRead:0,seen:0}, {_id:5,notRead:0,seen:0}, {_id:1,notRead:0,seen:0} ], 
+	groups:[{_id:1, notRead:0, seen:[]},]
 },
 { _id:7, userName:'user7', password:'1234', friends: [], 
-	groups:[{id:1, notRead:0, seen:[]}, {groups:[id:2, notRead:0, seen:[]}]
+	groups:[{_id:1, notRead:0, seen:[]}, {_id:2, notRead:0, seen:[]}]
 },
 
 ]);
 db.users.updateOne(
-   { id: 4, "friends.id": 2 },
+   { _id: 4, "friends._id": 2 },
    { $inc: { "friends.$.notRead" : 1 } }
 )
 db.users.updateOne(
-   { id: 4, "friends.id": 2 },
+   { _id: 4, "friends._id": 2 },
    { $set: { "friends.$.notRead" : 0 } }
 )
-db.users.find({id:4})
+db.users.find({_id:4})
 
 db.groups.insertMany([
 { _id:1, groupName:'group1', memberIds:[1,2,3,4,5,6,7]},
-{ _id:2, groupName:'group1', memberIds:[1,2,3,4,7]}
+{ _id:2, groupName:'group2', memberIds:[1,2,3,4,7]}
 ]);
 
 */
