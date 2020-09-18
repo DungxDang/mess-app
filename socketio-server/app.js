@@ -33,7 +33,7 @@ io.on('connection', (socket) => {
 		//console.log('joinprivroom',userId);
 		groups.forEach((group) =>{
 			group.memberIds.forEach(id =>{
-				socket.to(group+'').emit('I\'m online-g', group.id, userId);
+				socket.to(id+'').emit('I\'m online-g', group._id, userId);
 			});
 		});
 	});
@@ -96,7 +96,7 @@ io.on('connection', (socket) => {
 		socket.to(friendId+'').emit('online-notRead', userId);
 	});
 
-	socket.on('gonline-notRead', (groupId, userId, memberId) => {
+	socket.on('gonline-notRead', (groupId, memberId) => {//here
 		socket.to(memberId+'').emit('gonline-notRead', groupId);
 	});
 

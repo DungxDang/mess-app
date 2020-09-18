@@ -48,20 +48,22 @@ class FriendList extends React.Component {
 
               var currentChatFriend = this.props.getChatFriend();
               if(currentChatFriend){
-                var exist = false;
-                users.forEach((friend) =>{
-                  if(friend._id===currentChatFriend._id){
-                    exist = true;
-                    console.log('refresh-didupdate');
-                    this.handleClick(friend, true);
-                  }
-                });
-                if(!exist)
-                  this.props.setStateApp({
-                    roomID:null,
-                    chatFriend:null,
-                    messages:[],
+                if(currentChatFriend.userName){
+                  var exist = false;
+                  users.forEach((friend) =>{
+                    if(friend._id===currentChatFriend._id){
+                      exist = true;
+                      console.log('refresh-didupdate');
+                      this.handleClick(friend, true);
+                    }
                   });
+                  if(!exist)
+                    this.props.setStateApp({
+                      roomID:null,
+                      chatFriend:null,
+                      messages:[],
+                    });
+                }
               }
             })
             .catch(err =>{
@@ -138,7 +140,7 @@ class FriendList extends React.Component {
 
               this.props.socket.on('joinRoom', (friendId, roomId) =>{
                 console.log('fjoinroom', friendId);
-                let friend = this.props.isChating(friendId);
+                let friend = this.props.isChatting(friendId);
                 if(friend){
 
                     friend.chatting = true;
@@ -150,7 +152,7 @@ class FriendList extends React.Component {
 
               this.props.socket.on('iJoinedRoomToo', (friendId) =>{
                 console.log('iJoinedRoomToo', friendId);
-                let friend = this.props.isChating(friendId);
+                let friend = this.props.isChatting(friendId);
                 if(friend){
                     console.log('iJoinedRoomToocor', friendId);
                     friend.chatting = true;
@@ -185,7 +187,7 @@ class FriendList extends React.Component {
               });
 
               this.props.socket.on('leaveChat', (friendId) =>{
-                let friend = this.props.isChating(friendId);
+                let friend = this.props.isChatting(friendId);
                 if(friend){
                   friend.chatting = false;
                 }
@@ -214,9 +216,6 @@ class FriendList extends React.Component {
               this.props.socket.on('reconnect', (attemptNumber) => {
 
                 console.log('reconnect', this.props.userId, attemptNumber);
-                this.props.socket.emit('identity',
-                  {userId:this.props.userId, friendListIds:this.props.friendListIds}
-                );
 
                 this.props.refresh();
               });

@@ -48,10 +48,10 @@ class App extends React.Component{
 						socket.emit('leaveRoom', this.state.roomId, this.props.userId);
 				
 				if(friend.userName)
-					friend.chating = false;
+					friend.chatting = false;
 				else
 					friend.members.forEach(mem => {
-						mem.chating = false;
+						mem.chatting = false;
 					});
 			}
 
@@ -97,7 +97,7 @@ class App extends React.Component{
 		this.setState(state);
 	}
 
-	isChating(id){
+	isChatting(id){
 		if(this.state.chatFriend)
 			if(this.state.chatFriend._id===id)
 				return this.state.chatFriend;
@@ -111,7 +111,7 @@ class App extends React.Component{
 		this.setRoom = this.setRoom.bind(this);
 		this.getChatFriend = this.getChatFriend.bind(this);
 		this.setStateApp = this.setStateApp.bind(this);
-		this.isChating = this.isChating.bind(this);
+		this.isChatting = this.isChatting.bind(this);
 
   		var friendListIds = this.props.friends.map((friend) => friend._id);
   		var groupIds = this.props.groups.map((group) => group._id);
@@ -157,7 +157,7 @@ class App extends React.Component{
 									friendListIds={friendListIds}
 									getChatFriend={this.getChatFriend}
 									setStateApp={this.setStateApp}
-									isChating={this.isChating}
+									isChatting={this.isChatting}
 									refresh={this.props.refresh}
 									socket={socket}
 						/>
@@ -169,7 +169,7 @@ class App extends React.Component{
 									groupIds={groupIds}
 									getChatFriend={this.getChatFriend}
 									setStateApp={this.setStateApp}
-									isChating={this.isChating}
+									isChatting={this.isChatting}
 									refresh={this.props.refresh}
 									socket={socket}
 						/>

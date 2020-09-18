@@ -10,6 +10,7 @@ function NewMess(props){
 		props.group.members.forEach(mem =>{
 
 			if(!mem.chatting){
+				console.log('memchatting', mem);
 				let condition = {_id:mem._id, 'groups._id':props.group._id};
 				let update = {'$inc':{'groups.$.notRead':1}};//test
 				fetch('http://localhost:3001/incNotRead',
@@ -142,7 +143,7 @@ class Room extends React.Component{
 		this.props.group.setSeen_chatting = this.setSeen_chatting.bind(this);
 		this.props.group.missingOn = this.missingOn.bind(this);
 
-		this.props.socket.on('message', (_id, memberId, memberName, mess) =>{
+		this.props.socket.on('gmessage', (_id, memberId, memberName, mess) =>{
 			if(this.props.group.seen.length){
 		        let condition = {_id:this.props.userId, 'groups._id':this.props.group._id};
 		        let update = {'$set':{'groups.$.seen':[]}};
@@ -190,7 +191,7 @@ class Room extends React.Component{
 		var userId = this.props.userId;
 		var repeat = '';
 		const list = this.state.messages.map((e) =>{
-			if(repeat!==e.memberName){
+			if(repeat!==e.memberId){
 				repeat = e.memberId;
 				if(userId!==e.memberId){
 					let det = 
