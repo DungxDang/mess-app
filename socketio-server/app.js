@@ -96,7 +96,7 @@ io.on('connection', (socket) => {
 		socket.to(friendId+'').emit('online-notRead', userId);
 	});
 
-	socket.on('gonline-notRead', (groupId, memberId) => {//here
+	socket.on('gonline-notRead', (groupId, memberId) => {
 		socket.to(memberId+'').emit('gonline-notRead', groupId);
 	});
 

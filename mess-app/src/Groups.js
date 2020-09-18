@@ -91,8 +91,6 @@ class Groups extends React.Component {
                 groups:groups
               });
 
-              this.loadMembers(groups);
-
               var currentChatGroup = this.props.getChatFriend();
               if(currentChatGroup)
                 if(currentChatGroup.groupName)
@@ -122,6 +120,7 @@ class Groups extends React.Component {
               .then(data => data.json())
               .then(groups =>{
 
+                //groups.memberIds = groups.memberIds.filter(id => id!==this.props.userId);
                 this.props.socket.emit('m-online', this.props.userId, groups);
 
                 this.props.socket.emit('groups-identity',
@@ -145,7 +144,7 @@ class Groups extends React.Component {
                   groups:groups
                 });
 
-                this.loadMembers(groups);
+                this.loadMembers(groups, false);
 
               })
               .catch(err =>{
@@ -166,9 +165,7 @@ class Groups extends React.Component {
                     group.members.forEach(member =>{
                       
                       if(member._id===memberId)
-                        if(member.isOnline)
                           member.isOnline = true;
-                        
                       else
                         if(member.isOnline)
                           isOnline = isOnline + 1;
@@ -202,8 +199,9 @@ class Groups extends React.Component {
               });
 
               this.props.socket.on('joinRoom-g', (memberId, groupId) =>{
-                console.log('gfjoinroom', memberId);
-                var group = this.props.isChatting(groupId)
+                console.log('gfjoinroom', groupId, memberId);
+                var group = this.props.isChatting(groupId);
+                console.log('gfjoinroom', group);
                 if(group){
                   group.members.forEach(mem=>{
                     if(mem._id===memberId)
@@ -215,14 +213,13 @@ class Groups extends React.Component {
               });
 
               this.props.socket.on('iJoinedRoomToo-g', (groupId, memberId) =>{
-                console.log('iJoinedRoomToog', groupId);
-                var group = this.props.isChatting(groupId)
+                console.log('iJoinedRoomToog', groupId, memberId);
+                var group = this.props.isChatting(groupId);
+                console.log('iJoinedRoomToog-g', group);
                 if(group){
-                  group.members.forEach(mem=>{
+                  group.members.forEach(mem =>{
                     if(mem._id===memberId)
                       mem.chatting = true;
-
-                    console.log('iJoinedRoomToocor-g', groupId);
                   });
                 }
               });
@@ -245,7 +242,7 @@ class Groups extends React.Component {
                 this.state.groups.forEach((group) =>{
                   if(group._id===groupId){
                     group.seen.push(memberName);
-                      console.log('online-seen2-g',groupId, memberName);
+                      console.log('online-seen2-g',groupId, memberName, group.seen);
                     if(group.setSeen_chatting){
                       console.log('online-seen3-g',groupId, memberName);
                       group.setSeen_chatting(group);
@@ -273,21 +270,17 @@ class Groups extends React.Component {
                   if(group._id===groupId){
                     console.log('goffline', groupId);
                     let isOnline = 0;
-                    let current = false;
 
                     group.members.forEach(member =>{
                       
                       if(member._id===memberId)
-                        if(member.isOnline){
-                          current = true;
-                          member.isOnline = false;
-                        }
+                        member.isOnline = false;
                       else
                         if(member.isOnline)
                           isOnline = isOnline + 1;
                     });
 
-                    if(isOnline===0 && current){
+                    if(isOnline===0){
                       group.isOnline = false;
                       isUpdate = true;
                     }
@@ -306,9 +299,9 @@ class Groups extends React.Component {
   setupGroup(group, lastMemberMessage){
 
     if(group.notRead>0){
-
-      let condition = {_id:lastMemberMessage._id, 'groups._id':group._id};
-      let update = {'$push':{'groups.$.seen':lastMemberMessage.groupName}};
+      console.log('lastMemberMessage', lastMemberMessage);
+      let condition = {_id:lastMemberMessage.memberId, 'groups._id':group._id};
+      let update = {'$push':{'groups.$.seen':this.props.userName}};
       fetch('http://localhost:3001/seen',
           {
                     "method": 'POST',
@@ -373,8 +366,8 @@ class Groups extends React.Component {
 
       if(group.isOnline)
         group.members.forEach(mem =>{
-          if(mem.isOnline)
-            this.props.socket.emit('online-seen-g', this.props.groupName, group._id, mem._id);
+          if(mem._id===lastMemberMessage.memberId && mem.isOnline)
+            this.props.socket.emit('online-seen-g', this.props.userName , group._id, mem._id);
         });
 
       if(group.seen.length){
@@ -395,8 +388,9 @@ class Groups extends React.Component {
         .then(res =>{
 
           if(res)
-            if(res.nModified)
+            if(res.nModified){
               console.log('gremoveSeen-userid:'+this.props.userId);
+            }
             else
               console.log('conditionless-gremoveSeen-userid:'+this.props.userId);
           else{

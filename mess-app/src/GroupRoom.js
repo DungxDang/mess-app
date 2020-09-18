@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState} from 'react';
 
 
 
@@ -81,15 +81,15 @@ class Room extends React.Component{
 		this.state = {
 			messages:[],
 			seen:[],
-			messageEnd:null,
 		}
+		this.messageEnd = null;
 		this.missMess = [];
 		this.on = 1;
 	}
 
 	scrollToBottom(){
-		//this.state.messageEnd.scrollIntoView({behavior:'smooth'});
-		this.state.messageEnd.scrollTop = this.state.messageEnd.scrollHeight;
+		//this.messageEnd.scrollIntoView({behavior:'smooth'});
+		this.messageEnd.scrollTop = this.messageEnd.scrollHeight;
 	}
 
 
@@ -107,8 +107,9 @@ class Room extends React.Component{
 	}
 
 	setSeen_chatting(group) {
-		if(this.props.group._id===group._id)
-			this.setState({seen:group.seen});
+		if(this.props.group._id===group._id){
+			this.setState({seen:group.seen.slice()});
+		}
 	}
 
 	missingOn() {
@@ -132,6 +133,8 @@ class Room extends React.Component{
 				messages.push(message);
 		});
 		this.on = 0;
+		if(this.props.group.setupGroup)
+			this.props.group.setupGroup(this.props.group, messages[messages.length-1]);
 		return messages;
 	}
 
@@ -279,7 +282,7 @@ class Room extends React.Component{
 		let seen = '';
 		if(this.state.seen.length){
 			this.state.seen.forEach(memberName =>{
-				seen = memberName + ', ';
+				seen = seen + memberName + ', ';
 			});
 			if(this.state.seen.length>1)
 				seen = seen.slice(0,seen.length-2) + ' have seen';
@@ -290,7 +293,7 @@ class Room extends React.Component{
 		return(
 			<div>
 				<div style={{overflow:'scroll', height:'400px'}}
-						ref={(el) =>{this.state.messageEnd=el}}>
+						ref={(el) =>{this.messageEnd=el}}>
 					{list}
 				</div>
 				<div>{seen}</div>
