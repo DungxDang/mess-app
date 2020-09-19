@@ -17,6 +17,7 @@ class App extends React.Component{
 			messages:[],
 
 		};
+		this.update = false;
 
 	}
 
@@ -58,9 +59,11 @@ class App extends React.Component{
 			if(this.state.chatFriend)
 				this.state.chatFriend.setSeen_chatting = null;
 			
+			this.update = false;
 			this.setState({
 				roomId : roomId,
-				chatFriend : friend
+				chatFriend : friend,
+				messages : []
 			});
 
 
@@ -83,6 +86,7 @@ class App extends React.Component{
 				.then(data => data.json())
 				.then(data =>{
 					console.log('first load messages', data);
+					this.update = true;
 					this.setState({
 						messages : data
 					});
@@ -116,7 +120,7 @@ class App extends React.Component{
   		var groupIds = this.props.groups.map((group) => group._id);
 
 		var chatRoom = null;
-		if(this.state.messages.length)
+		if(this.update)
 			if(this.state.chatFriend.groupName)
 				chatRoom = (
 				     	<GroupRoom roomId={this.state.roomId}

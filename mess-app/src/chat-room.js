@@ -134,6 +134,7 @@ class Room extends React.Component{
 				.catch((err) =>{
 				  console.log(err);
 				});
+				console.log('seeennn', this.state.seen);
 				this.setState({seen:0}, this.scrollToBottom);
 				this.props.chatFriend.seen = 0;
 			}
@@ -237,7 +238,7 @@ class Room extends React.Component{
 			}
 		});
 
-
+		console.log('seeen', this.state.seen);
 		return(
 			<div>
 				<div style={{overflow:'scroll', height:'400px'}}

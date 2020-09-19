@@ -35,6 +35,9 @@ class Groups extends React.Component {
             .then(members =>{
 
               group.members = members.filter(mem => mem._id!==this.props.userId);
+
+              this.props.socket.emit('m-online', this.props.userId, groups);
+
               if(currentChatGroupId){
                 if(group._id===currentChatGroupId){
                   exist = true;
@@ -67,8 +70,6 @@ class Groups extends React.Component {
           })
             .then(data => data.json())
             .then(groups =>{
-
-              this.props.socket.emit('m-online', this.props.userId, groups);//here
 
               this.props.socket.emit('groups-identity',
                 {
@@ -119,9 +120,6 @@ class Groups extends React.Component {
               })
               .then(data => data.json())
               .then(groups =>{
-
-                //groups.memberIds = groups.memberIds.filter(id => id!==this.props.userId);
-                this.props.socket.emit('m-online', this.props.userId, groups);
 
                 this.props.socket.emit('groups-identity',
                   {
@@ -262,19 +260,21 @@ class Groups extends React.Component {
               });
 
               this.props.socket.on('group-offline', (groupId, memberId) =>{
-                console.log('group-offline', groupId);
+                console.log('group-offline', groupId, memberId);
                 let isUpdate = false;
 
                 let newgroups = this.state.groups.map((group) =>{
 
                   if(group._id===groupId){
-                    console.log('goffline', groupId);
+                    console.log('goffline', groupId, memberId);
                     let isOnline = 0;
 
                     group.members.forEach(member =>{
                       
-                      if(member._id===memberId)
+                      if(member._id===memberId){
                         member.isOnline = false;
+                        member.chatting = false;
+                      }
                       else
                         if(member.isOnline)
                           isOnline = isOnline + 1;
